@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRISH TALKER - ULTIMATE EDITION</title>
+    <title>IRISH TALKER - FIXED EDITION</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
 
@@ -140,7 +140,7 @@
     <!-- SCREEN 1: DASHBOARD -->
     <div id="dashboard">
         <div class="header">
-            <div class="app-name">IRISH TALKER <span style="font-size:12px; color:white; background:var(--record); padding:2px 6px; border-radius:4px;">PRO</span></div>
+            <div class="app-name">IRISH TALKER <span style="font-size:12px; color:white; background:var(--record); padding:2px 6px; border-radius:4px;">FIXED</span></div>
             <div class="app-sub">Complete Spoken English Training System</div>
         </div>
         <div id="card-list"></div>
@@ -178,7 +178,7 @@
     <script>
     // --- APP ENGINE ---
     const app = {
-        data: [], // PART 2 will fill this
+        data: [],
         activeScenario: null,
         stepIndex: 0,
         synth: window.speechSynthesis,
@@ -186,12 +186,9 @@
         chunks: [],
         stream: null,
 
-        // Called after data is loaded
         startApp: function() {
             this.renderDashboard();
             this.setupMic();
-            
-            // Voice Config
             if(this.synth.onvoiceschanged !== undefined) {
                 this.synth.onvoiceschanged = () => this.loadVoices();
             }
@@ -200,7 +197,6 @@
 
         loadVoices: function() {
             const voices = this.synth.getVoices();
-            // Try to find a UK Male voice for Liam
             this.voice = voices.find(v => (v.lang.includes('GB') || v.lang.includes('UK')) && v.name.includes('Male')) || voices[0];
         },
 
@@ -226,12 +222,10 @@
         openScenario: function(index) {
             this.activeScenario = this.data[index];
             this.stepIndex = 0;
-            
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
             document.getElementById('level-title').innerText = this.activeScenario.title;
             document.getElementById('chat-box').innerHTML = '';
-            
             this.runStep();
         },
 
@@ -247,12 +241,9 @@
 
         runStep: function() {
             const total = this.activeScenario.dialogue.length;
-            
-            // Update UI
             document.getElementById('step-count').innerText = `${this.stepIndex}/${total}`;
             document.getElementById('progress-bar').style.width = `${(this.stepIndex / total) * 100}%`;
 
-            // Check Finish
             if(this.stepIndex >= total) {
                 this.addBubble('bot', "Excellent job! Scenario completed.", "නියමයි! කොටස අවසන්.");
                 this.speak("Excellent job! Scenario completed.");
@@ -278,17 +269,13 @@
             const box = document.getElementById('chat-box');
             const div = document.createElement('div');
             div.className = `bubble ${role}`;
-            
             let html = `<div>${text}</div><div class="si-text">${si}</div>`;
-            
             if(role === 'user' && this.activeScenario.dialogue[this.stepIndex].hint) {
                 html += `<div class="hint-text">Tip: ${this.activeScenario.dialogue[this.stepIndex].hint}</div>`;
             }
-            
             if(audioUrl) {
                 html += `<audio controls src="${audioUrl}" class="audio-player"></audio>`;
             }
-
             div.innerHTML = html;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
@@ -298,7 +285,7 @@
             this.synth.cancel();
             const u = new SpeechSynthesisUtterance(text);
             u.voice = this.voice;
-            u.rate = 0.9; 
+            u.rate = 0.9;
             u.onend = callback || null;
             this.synth.speak(u);
         },
@@ -307,7 +294,6 @@
             const btn = document.getElementById('mic-btn');
             const txt = document.getElementById('status-text');
             txt.innerText = msg;
-            
             if(enabled) {
                 btn.classList.remove('disabled');
             } else {
@@ -323,21 +309,18 @@
             const start = async (e) => {
                 if(e.cancelable) e.preventDefault();
                 if(btn.classList.contains('disabled')) return;
-
                 try {
                     if (!this.stream) this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     this.mediaRecorder = new MediaRecorder(this.stream);
                     this.chunks = [];
-                    
                     this.mediaRecorder.ondataavailable = e => this.chunks.push(e.data);
                     this.mediaRecorder.onstop = () => this.processAudio();
-                    
                     this.mediaRecorder.start();
                     btn.classList.add('active');
                     status.innerText = "Recording...";
                     status.classList.add('rec');
                 } catch(err) {
-                    alert("Microphone Access Denied! Check settings.");
+                    alert("Allow Microphone Access!");
                 }
             };
 
@@ -351,7 +334,6 @@
                 }
             };
 
-            // Touch & Mouse Events
             btn.addEventListener('mousedown', start);
             btn.addEventListener('mouseup', stop);
             btn.addEventListener('mouseleave', stop);
@@ -359,27 +341,39 @@
             btn.addEventListener('touchend', stop);
         },
 
+        // FIXED: ADDED SAFETY TIMER TO PREVENT FREEZING
         processAudio: function() {
             const blob = new Blob(this.chunks, { type: 'audio/ogg' });
             const url = URL.createObjectURL(blob);
             const line = this.activeScenario.dialogue[this.stepIndex];
 
             this.addBubble('user', line.text, line.si, url);
+            document.getElementById('status-text').innerText = "Good!";
             
-            // Replay user audio
+            // Auto play
             const a = new Audio(url);
-            a.play();
-            a.onend = () => {
+            
+            // Safety mechanism: Ensure we advance even if audio fails or is too short
+            let advanced = false;
+            const advance = () => {
+                if(advanced) return;
+                advanced = true;
                 this.stepIndex++;
                 setTimeout(() => this.runStep(), 1000);
             };
+
+            a.onend = advance;
+            a.onerror = advance;
+            
+            // Force advance after 4 seconds max (Safety Timer)
+            setTimeout(advance, 4000);
+            
+            a.play().catch(e => console.log("Autoplay blocked"));
         },
 
         replayBot: function() {
-            // Replay last bot message logic
             let i = this.stepIndex - 1;
             if(i < 0) return;
-            // Scan backwards for bot message
             while(i >= 0) {
                 if(this.activeScenario.dialogue[i].role === 'bot') {
                     this.speak(this.activeScenario.dialogue[i].text);
@@ -390,25 +384,18 @@
         },
 
         showHelp: function() {
-            // Speak the user's line for them
             const line = this.activeScenario.dialogue[this.stepIndex];
-            if(line.role === 'user') {
-                this.speak(line.text);
-            }
+            if(line.role === 'user') this.speak(line.text);
         }
     };
 
-    // =======================================================
-    // PART 2: DATA SECTION START (PASTE BELOW HERE)
-    // =======================================================
-const scenarios = [
-        // =================================================================
-        // SECTION 1: THE JOB & SITE WORK (වැඩබිමේ ජීවිතය)
-        // =================================================================
-
+    // =============================================
+    // DATA SECTION (Boss changed to Sir)
+    // =============================================
+    const scenarios = [
         // --- 1. THE BIG INTERVIEW ---
         {
-            id: 1, title: "1. The Job Interview", icon: "👔", desc: "Your most important conversation.",
+            id: 1, title: "1. The Job Interview", icon: "👔", desc: "Full Interview Simulation",
             dialogue: [
                 { role: 'bot', text: "Good morning. Please come in and sit down.", si: "සුභ උදෑසනක්. ඇතුලට ඇවිත් වාඩි වෙන්න." },
                 { role: 'user', text: "Good morning sir. Thank you.", si: "සුභ උදෑසනක් සර්. ස්තූතියි.", hint: "Good morning sir." },
@@ -419,7 +406,7 @@ const scenarios = [
                 { role: 'bot', text: "What type of welding can you do?", si: "මොන වගේ වෑල්ඩින් ද ඔයාට පුළුවන්?" },
                 { role: 'user', text: "I am an expert in Arc Welding and heavy steel fabrication.", si: "මම ආක් වෑල්ඩින් සහ බර යකඩ වැඩ වලට දක්ෂයි.", hint: "Expert in Arc Welding." },
                 { role: 'bot', text: "Can you read technical drawings and blueprints?", si: "ඔයාට ටෙක්නිකල් ඩ්‍රෝවින්ග්ස් සහ ප්ලෑන් කියවන්න පුළුවන්ද?" },
-                { role: 'user', text: "Yes sir. I can read plans and work without supervision.", si: "ඔව් සර්. මට ප්ලෑන් කියවලා තනියම වැඩ කරන්න පුළුවන්.", hint: "Yes, I can read plans." },
+                { role: 'user', text: "Yes sir. I can read plans and work without supervision.", si: "ඔව් සර්. මට ප්ලෑන් කියවලා තනියම වැඩ කරන්න පුළුවන්.", hint: "Yes sir, I can read plans." },
                 { role: 'bot', text: "Do you have experience with concrete?", si: "කොන්ක්‍රීට් එක්ක වැඩ කරලා තියෙනවද?" },
                 { role: 'user', text: "Yes, I can do pouring, vibrating, and leveling.", si: "ඔව්, මට වත් කරන්න, වයිබ්‍රේට් කරන්න සහ ලෙවල් කරන්න පුළුවන්.", hint: "Pouring, vibrating, and leveling." },
                 { role: 'bot', text: "Do you have a heavy vehicle license?", si: "බර වාහන බලපත්‍රයක් තියෙනවද?" },
@@ -429,7 +416,7 @@ const scenarios = [
                 { role: 'bot', text: "Okay Nuwan. When can you start?", si: "හරි නුවන්. කවදද පටන් ගන්න පුළුවන්?" },
                 { role: 'user', text: "I can start immediately after my visa is ready.", si: "වීසා හම්බුන ගමන් මට පටන් ගන්න පුළුවන්.", hint: "Immediately after visa." },
                 { role: 'bot', text: "Great. We will let you know soon.", si: "නියමයි. අපි ඉක්මනට දන්වන්නම්." },
-                { role: 'user', text: "Thank you for your time sir.", si: "ඔබේ කාලයට ස්තූතියි සර්.", hint: "Thank you for your time." }
+                { role: 'user', text: "Thank you for your time sir.", si: "ඔබේ කාලයට ස්තූතියි සර්.", hint: "Thank you for your time sir." }
             ]
         },
 
@@ -438,7 +425,7 @@ const scenarios = [
             id: 2, title: "2. Site Induction", icon: "🚧", desc: "Safety rules and meeting the foreman.",
             dialogue: [
                 { role: 'bot', text: "Welcome to the site Nuwan. I am the Site Manager.", si: "සයිට් එකට සාදරයෙන් පිළිගන්නවා. මම සයිට් මැනේජර්." },
-                { role: 'user', text: "Good morning boss. Happy to be here.", si: "ගුඩ් මෝනින් බොස්. මෙහේ ආපු එක සතුටක්.", hint: "Happy to be here." },
+                { role: 'user', text: "Good morning sir. Happy to be here.", si: "ගුඩ් මෝනින් සර්. මෙහේ ආපු එක සතුටක්.", hint: "Good morning sir." },
                 { role: 'bot', text: "First, do you have your Safe Pass card?", si: "ඉස්සෙල්ලාම, ඔයාගේ 'සේෆ් පාස්' කාඩ් එක තියෙනවද?" },
                 { role: 'user', text: "Yes, here is my Safe Pass card.", si: "ඔව්, මෙන්න මගේ කාඩ් එක.", hint: "Here is my Safe Pass." },
                 { role: 'bot', text: "Good. Do you have your PPE (Personal Protective Equipment)?", si: "හොඳයි. ඔයාගේ ආරක්ෂක ඇඳුම් (PPE) තියෙනවද?" },
@@ -476,7 +463,7 @@ const scenarios = [
             id: 4, title: "4. Welding Job", icon: "🔥", desc: "Technical instructions for welding.",
             dialogue: [
                 { role: 'bot', text: "Nuwan, bring your welding gear here.", si: "නුවන්, වෑල්ඩින් බඩු ටික මෙහෙට ගේන්න." },
-                { role: 'user', text: "I am ready boss. What is the job?", si: "මම ලෑස්තියි බොස්. මොකක්ද වැඩේ?", hint: "What is the job?" },
+                { role: 'user', text: "I am ready sir. What is the job?", si: "මම ලෑස්තියි සර්. මොකක්ද වැඩේ?", hint: "What is the job?" },
                 { role: 'bot', text: "We need to weld this bracket to the beam.", si: "අපිට මේ බ්‍රැකට් එක බීම් එකට පාස්සන්න ඕනා." },
                 { role: 'user', text: "Okay. Do you want a Fillet or Butt weld?", si: "හරි. ෆිලට් වෙල්ඩ් එකක්ද බට් වෙල්ඩ් එකක්ද ඕනා?", hint: "Fillet or Butt weld?" },
                 { role: 'bot', text: "A heavy fillet weld all around.", si: "වටේටම හොඳ ඝනකම ෆිලට් වෙල්ඩ් එකක්." },
@@ -486,7 +473,7 @@ const scenarios = [
                 { role: 'bot', text: "How long will it take?", si: "කොච්චර වෙලා යයිද?" },
                 { role: 'user', text: "Maybe 20 minutes to finish.", si: "විනාඩි 20ක් විතර යයි ඉවර කරන්න.", hint: "20 minutes to finish." },
                 { role: 'bot', text: "Good. Let me know when done.", si: "හොඳයි. ඉවර වුනාම කියන්න." },
-                { role: 'user', text: "Will do boss.", si: "අනිවාර්යයෙන්ම බොස්.", hint: "Will do boss." }
+                { role: 'user', text: "Will do sir.", si: "අනිවාර්යයෙන්ම සර්.", hint: "Will do sir." }
             ]
         },
 
@@ -516,7 +503,7 @@ const scenarios = [
                 { role: 'bot', text: "Nuwan, wait! This measurement is wrong.", si: "නුවන් ඉන්න! මේ මිනුම වැරදියි." },
                 { role: 'user', text: "Oh? Let me check my tape measure.", si: "ආ? මම මගේ ටේප් එක බලන්නම්.", hint: "Let me check tape." },
                 { role: 'bot', text: "It is 100mm too short.", si: "මේක මිලිමීටර් 100ක් කොටයි." },
-                { role: 'user', text: "Sorry boss. I made a mistake.", si: "සොරි බොස්. මගේ අතින් වැරදීමක් වුනේ.", hint: "Sorry boss. My mistake." },
+                { role: 'user', text: "Sorry sir. I made a mistake.", si: "සොරි සර්. මගේ අතින් වැරදීමක් වුනේ.", hint: "Sorry sir. My mistake." },
                 { role: 'bot', text: "We cannot use this piece now.", si: "අපිට දැන් මේ කෑල්ල පාවිච්චි කරන්න බෑ." },
                 { role: 'user', text: "I will cut a new piece immediately.", si: "මම ඉක්මනට අලුත් කෑල්ලක් කපන්නම්.", hint: "Cut new piece immediately." },
                 { role: 'bot', text: "Be careful next time. Steel is expensive.", si: "ඊළඟ පාර පරිස්සම් වෙන්න. යකඩ ගණන් වැඩියි." },
@@ -531,7 +518,7 @@ const scenarios = [
             id: 7, title: "7. Tool Breakdown", icon: "⚙️", desc: "Reporting a broken machine.",
             dialogue: [
                 { role: 'bot', text: "Why have you stopped working?", si: "ඇයි වැඩේ නැවැත්තුවේ?" },
-                { role: 'user', text: "Boss, the grinder is not working.", si: "බොස්, ග්‍රයින්ඩරේ වැඩ කරන්නේ නෑ.", hint: "Grinder not working." },
+                { role: 'user', text: "Sir, the grinder is not working.", si: "සර්, ග්‍රයින්ඩරේ වැඩ කරන්නේ නෑ.", hint: "Sir, grinder not working." },
                 { role: 'bot', text: "Is it plugged in correctly?", si: "ප්ලග් එක හරියට ගහලද?" },
                 { role: 'user', text: "Yes, I checked the plug and fuse.", si: "ඔව්, මම ප්ලග් එකයි ෆියුස් එකයි බැලුවා.", hint: "Checked plug and fuse." },
                 { role: 'bot', text: "Maybe the cable is cut?", si: "සමහර විට වයර් එක කැපිලද?" },
@@ -548,13 +535,13 @@ const scenarios = [
             id: 8, title: "8. End of Shift", icon: "🌅", desc: "Cleaning up and timesheets.",
             dialogue: [
                 { role: 'bot', text: "Alright lads, pack up. Time to go.", si: "හරි කොල්ලනේ, බඩු අස්කරගන්න. යන්න වෙලාව හරි." },
-                { role: 'user', text: "Okay boss. I am cleaning my area.", si: "හරි බොස්. මම මගේ ඒරියා එක සුද්ද කරනවා.", hint: "Cleaning my area." },
+                { role: 'user', text: "Okay sir. I am cleaning my area.", si: "හරි සර්. මම මගේ ඒරියා එක සුද්ද කරනවා.", hint: "Cleaning my area." },
                 { role: 'bot', text: "Did you put the tools back?", si: "ටූල්ස් ටික ආයේ තිබ්බද?" },
                 { role: 'user', text: "Yes, everything is in the box.", si: "ඔව්, ඔක්කොම පෙට්ටිය ඇතුලේ.", hint: "Everything in the box." },
                 { role: 'bot', text: "Don't forget to sign the timesheet.", si: "ටයිම්-ෂීට් එක අත්සන් කරන්න අමතක කරන්න එපා." },
                 { role: 'user', text: "I signed it just now.", si: "මම දැන් අත්සන් කළා.", hint: "Signed it just now." },
                 { role: 'bot', text: "Good job today Nuwan.", si: "අද හොඳට වැඩ කළා නුවන්." },
-                { role: 'user', text: "Thanks boss. See you tomorrow.", si: "තැන්ක්ස් බොස්. හෙට හම්බෙමු.", hint: "See you tomorrow." },
+                { role: 'user', text: "Thanks sir. See you tomorrow.", si: "තැන්ක්ස් සර්. හෙට හම්බෙමු.", hint: "See you tomorrow." },
                 { role: 'bot', text: "Have a good evening.", si: "සුභ සැන්දෑවක්." },
                 { role: 'user', text: "You too. Bye.", si: "ඔබටත් එසේමයි. බායි.", hint: "You too. Bye." }
             ]
@@ -637,15 +624,15 @@ const scenarios = [
             id: 13, title: "13. Calling Boss (Sick)", icon: "🤒", desc: "Taking a sick day.",
             dialogue: [
                 { role: 'bot', text: "(Phone rings) Liam speaking.", si: "(ෆෝන් එක වදී) ලියම් කතා කරනවා." },
-                { role: 'user', text: "Hello Liam. This is Nuwan.", si: "හෙලෝ ලියම්. මේ නුවන්.", hint: "This is Nuwan." },
+                { role: 'user', text: "Hello sir. This is Nuwan.", si: "හෙලෝ සර්. මේ නුවන්.", hint: "Hello sir. This is Nuwan." },
                 { role: 'bot', text: "Oh hi Nuwan. Everything okay?", si: "ආ නුවන්. හැමදේම හොඳින්ද?" },
-                { role: 'user', text: "Sorry Liam, I cannot come to work today.", si: "සොරි ලියම්, මට අද වැඩට එන්න බෑ.", hint: "Cannot come to work." },
+                { role: 'user', text: "Sorry sir, I cannot come to work today.", si: "සොරි සර්, මට අද වැඩට එන්න බෑ.", hint: "Cannot come to work." },
                 { role: 'bot', text: "Why? Are you sick?", si: "ඇයි? අසනීපද?" },
                 { role: 'user', text: "Yes, I have a fever and headache.", si: "ඔව්, මට උණ සහ ඔළුව කැක්කුම.", hint: "Fever and headache." },
                 { role: 'bot', text: "Okay. Do you need a doctor?", si: "හරි. දොස්තර කෙනෙක් ඕනද?" },
                 { role: 'user', text: "I will rest today. I hope to come tomorrow.", si: "මම අද රෙස්ට් කරනවා. හෙට එන්න බලාපොරොත්තු වෙනවා.", hint: "Hope to come tomorrow." },
                 { role: 'bot', text: "No problem. Feel better soon.", si: "ප්‍රශ්නයක් නෑ. ඉක්මනට සනීප කරගන්න." },
-                { role: 'user', text: "Thanks boss. Bye.", si: "තැන්ක්ස් බොස්. බායි.", hint: "Thanks boss." }
+                { role: 'user', text: "Thanks sir. Bye.", si: "තැන්ක්ස් සර්. බායි.", hint: "Thanks sir." }
             ]
         },
 
@@ -699,13 +686,13 @@ const scenarios = [
             id: 17, title: "17. Requesting Holiday", icon: "✈️", desc: "Asking boss for days off.",
             dialogue: [
                 { role: 'bot', text: "Yes Nuwan, what do you need?", si: "ඔව් නුවන්, මොකක්ද ඕනා?" },
-                { role: 'user', text: "Boss, I need to ask for a holiday.", si: "බොස්, මට නිවාඩුවක් ඉල්ලන්න ඕනා.", hint: "Ask for a holiday." },
+                { role: 'user', text: "Sir, I need to ask for a holiday.", si: "සර්, මට නිවාඩුවක් ඉල්ලන්න ඕනා.", hint: "Sir, need a holiday." },
                 { role: 'bot', text: "When do you want to go?", si: "කවදද යන්න ඕනා?" },
                 { role: 'user', text: "Next month, for one week.", si: "ලබන මාසේ, සතියකට.", hint: "Next month, one week." },
                 { role: 'bot', text: "Is it urgent?", si: "ඒක හදිසිද?" },
                 { role: 'user', text: "Yes, a family matter.", si: "ඔව්, පවුලේ වැඩක්.", hint: "Yes, family matter." },
                 { role: 'bot', text: "Okay, fill out the leave form.", si: "හරි, නිවාඩු ෆෝම් එක පුරවන්න." },
-                { role: 'user', text: "Thank you boss.", si: "ස්තූතියි බොස්.", hint: "Thank you boss." }
+                { role: 'user', text: "Thank you sir.", si: "ස්තූතියි සර්.", hint: "Thank you sir." }
             ]
         },
 
@@ -735,7 +722,7 @@ const scenarios = [
                 { role: 'bot', text: "Sounds relaxing. Do you like Ireland?", si: "නිදහස් පාටයි. ඔයා අයර්ලන්තෙට කැමතිද?" },
                 { role: 'user', text: "Yes, people are nice but it is cold.", si: "ඔව්, මිනිස්සු හොඳයි, හැබැයි සීතලයි.", hint: "Nice but cold." },
                 { role: 'bot', text: "Haha, you will get used to it.", si: "හහ් හා, ඔයාට ඒක හුරු වෙයි." },
-                { role: 'user', text: "I hope so. Have a good weekend.", si: "එහෙම වෙයි කියලා හිතනවා. සුභ සති අන්තයක්.", hint: "Have a good weekend." }
+                { role: 'user', text: "Okay sir. Have a good weekend.", si: "හරි සර්. සුභ සති අන්තයක්.", hint: "Have a good weekend." }
             ]
         },
 
@@ -750,12 +737,13 @@ const scenarios = [
                 { role: 'bot', text: "We will tidy the store room.", si: "අපි ස්ටෝ රූම් එක අස් කරමු." },
                 { role: 'user', text: "Okay, I will get the broom.", si: "හරි, මම කොස්ස අරන් එන්නම්.", hint: "I will get the broom." },
                 { role: 'bot', text: "Is your jacket waterproof?", si: "ඔයාගේ ජැකට් එකට වතුර යන්නෙ නැද්ද?" },
-                { role: 'user', text: "Yes, it is good quality.", si: "ඔව්, මේක හොඳ එකක්.", hint: "Yes, good quality." }
+                { role: 'user', text: "Yes, it is good quality.", si: "ඔව්, මේක හොඳ එකක්.", hint: "Yes, good quality." },
+                { role: 'bot', text: "Good. Keep warm.", si: "හොඳයි. රස්නෙට ඉන්න." },
+                { role: 'user', text: "Thanks sir.", si: "තැන්ක්ස් සර්.", hint: "Thanks sir." }
             ]
         }
     ];
 
-    // Trigger the app start from PART 1
     app.data = scenarios;
     app.startApp();
 
