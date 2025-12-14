@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE IRISH TALKER - REAL VOICE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg-dark: #111827;
+            --chat-bg: #1f2937;
+            --user-msg: #059669; /* WhatsApp Green */
+            --bot-msg: #374151;
+            --accent: #10b981;
+            --record-active: #ef4444; /* Red for recording */
+            --text-main: #f9fafb;
+            --text-sub: #9ca3af;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- DASHBOARD --- */
+        #dashboard {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid #374151;
+        }
+        .app-title { font-size: 24px; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
+        .sub-title { font-size: 13px; color: var(--text-sub); margin-top: 5px; }
+
+        .scenario-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 50px; }
+
+        .scenario-card {
+            background: var(--chat-bg);
+            padding: 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #374151;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .scenario-card:active { transform: scale(0.98); background: #4b5563; }
+        .s-icon { font-size: 32px; margin-right: 15px; }
+        .s-info { flex: 1; }
+        .s-title { font-weight: bold; font-size: 16px; }
+        .s-desc { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
+        .s-status { font-size: 12px; font-weight: bold; color: var(--accent); }
+
+        /* --- CHAT SCREEN --- */
+        #conversation-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); display: none; flex-direction: column; z-index: 100;
+        }
+
+        .chat-header {
+            padding: 15px; background: #111827; border-bottom: 1px solid #374151;
+            display: flex; align-items: center; gap: 15px;
+        }
+        .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        
+        .chat-area {
+            flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+            background-image: radial-gradient(#1f2937 1px, transparent 1px); background-size: 20px 20px;
+        }
+
+        .bubble {
+            max-width: 80%; padding: 15px; border-radius: 18px; font-size: 15px; line-height: 1.5;
+            position: relative; animation: popIn 0.3s ease;
+        }
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .bot { align-self: flex-start; background: var(--bot-msg); border-bottom-left-radius: 4px; }
+        .user { align-self: flex-end; background: var(--user-msg); color: white; border-bottom-right-radius: 4px; text-align: right; }
+        
+        /* Audio Player inside Bubble */
+        .audio-player-bubble {
+            margin-top: 5px;
+            width: 100%;
+            height: 30px;
+            filter: invert(1); /* Make it look okay on dark bg */
+        }
+
+        .guide-text { font-size: 12px; color: #fbbf24; margin-top: 5px; font-weight: bold; display: block; }
+        .si-translation { font-size: 12px; color: #9ca3af; margin-top: 5px; display: block; font-style: italic; }
+
+        /* --- CONTROLS --- */
+        .controls {
+            padding: 20px; background: #111827; border-top: 1px solid #374151;
+            display: flex; flex-direction: column; gap: 15px; align-items: center;
+            position: relative;
+        }
+
+        .instruction-box { text-align: center; color: var(--text-sub); font-size: 14px; min-height: 20px; transition: color 0.3s; }
+        .instruction-box.recording { color: var(--record-active); font-weight: bold; animation: pulseText 1s infinite; }
+
+        /* THE REAL MIC BUTTON */
+        .mic-container {
+            position: relative;
+            width: 80px; height: 80px;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .mic-btn-large {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: var(--accent); border: none; color: #064e3b;
+            font-size: 32px; cursor: pointer; z-index: 2;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center;
+            /* Disable text selection on button */
+            -webkit-user-select: none; user-select: none;
+        }
+
+        /* Animation when holding */
+        .mic-btn-large:active, .mic-btn-large.active {
+            transform: scale(1.2);
+            background: var(--record-active);
+            color: white;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+        }
+
+        .mic-btn-large.disabled { background: #374151; color: #6b7280; pointer-events: none; box-shadow: none; transform: scale(1); }
+
+        /* Ripple Effect */
+        .mic-ripple {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%; background: var(--record-active); opacity: 0; z-index: 1;
+        }
+        .mic-btn-large.active ~ .mic-ripple {
+            animation: ripple 1s infinite;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        @keyframes pulseText { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .action-row { display: flex; gap: 15px; width: 100%; }
+        .sec-btn {
+            flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #374151;
+            background: #1f2937; color: white; font-size: 14px; cursor: pointer;
+        }
+
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: #10b981; color: white; padding: 10px 20px; border-radius: 20px;
+            font-weight: bold; transition: transform 0.3s; z-index: 200;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+        <div class="header">
+            <div class="app-title">THE IRISH TALKER</div>
+            <div class="sub-title">Real Voice Training Simulation</div>
+        </div>
+        <div class="scenario-list" id="scenario-container"></div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div id="conversation-screen">
+        <div class="chat-header">
+            <button class="back-btn" onclick="app.closeChat()">←</button>
+            <div class="partner-info">
+                <div class="partner-name" id="chat-partner">Liam (Boss)</div>
+                <div class="partner-status">Online</div>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chat-box"></div>
+
+        <div class="controls">
+            <div class="instruction-box" id="instruction-text">Listen to Liam...</div>
+            
+            <!-- REAL MIC BUTTON -->
+            <div class="mic-container">
+                <button id="mic-btn" class="mic-btn-large">🎙️</button>
+                <div class="mic-ripple"></div>
+            </div>
+            
+            <div class="action-row">
+                <button class="sec-btn" onclick="app.replayAudio()">🔊 Replay Liam</button>
+                <button class="sec-btn" onclick="app.showHelp()">🆘 Help Me</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Great Job! 🎉</div>
+
+    <script>
+        // --- DATA ---
+        const scenarios = [
+            {
+                id: 1, title: "Rebar & Concrete", icon: "🏗️", desc: "Explaining your main job.",
+                dialogue: [
+                    { role: 'bot', text: "Welcome Nuwan. What specific work can you do?", si: "සාදරයෙන් පිළිගන්නවා. ඔයාට කරන්න පුළුවන් විශේෂ වැඩ මොනවද?" },
+                    { role: 'user', text: "I do Steel Fixing and Concreting.", si: "මම යකඩ බැඳීම සහ කොන්ක්‍රීට් වැඩ කරනවා.", hint: "Say: I do Steel Fixing and Concreting." },
+                    { role: 'bot', text: "Can you read the drawings for the steel bars?", si: "ඔයාට යකඩ ප්ලෑන් කියවන්න පුළුවන්ද?" },
+                    { role: 'user', text: "Yes, I can read blueprints and cut bars.", si: "ඔව්, මට බ්ලූ-ප්‍රින්ට් කියවලා කම්බි කපන්න පුළුවන්.", hint: "Say: Yes, I can read blueprints." },
+                    { role: 'bot', text: "Do you know how to use the poker vibrator?", si: "ඔයා පෝකර් වයිබ්‍රේටරේ පාවිච්චි කරන්න දන්නවද?" },
+                    { role: 'user', text: "Yes sir. I know pouring and vibrating.", si: "ඔව් සර්. මම කොන්ක්‍රීට් දාන්න සහ වයිබ්‍රේට් කරන්න දන්නවා.", hint: "Say: Yes, I know pouring and vibrating." }
+                ]
+            },
+            {
+                id: 2, title: "Welding Test", icon: "🔥", desc: "Answering technical questions.",
+                dialogue: [
+                    { role: 'bot', text: "We have some broken gates. Can you weld them?", si: "අපේ කැඩුනු ගේට්ටු වගයක් තියෙනවා. පාස්සන්න පුළුවන්ද?" },
+                    { role: 'user', text: "No problem. I am an Arc Welding expert.", si: "ප්‍රශ්නයක් නෑ. මම ආක් වෑල්ඩින් ගැන දක්ෂයි.", hint: "Say: No problem. I am an expert." },
+                    { role: 'bot', text: "What safety gear do you need?", si: "මොන වගේ ආරක්ෂක දේවල්ද ඔයාට ඕනා?" },
+                    { role: 'user', text: "I need a welding mask and leather gloves.", si: "මට වෑල්ඩින් මාස්ක් එකක් සහ ලෙදර් අත්වැසුම් ඕනා.", hint: "Say: I need mask and gloves." }
+                ]
+            }
+        ];
+
+        // --- APP LOGIC ---
+        const app = {
+            currentScenario: null,
+            dialogueIndex: 0,
+            isUserTurn: false,
+            speech: new SpeechSynthesisUtterance(),
+            
+            // Audio Recording Variables
+            mediaRecorder: null,
+            audioChunks: [],
+            stream: null,
+
+            init: function() {
+                this.renderDashboard();
+                this.setupVoice();
+                this.setupMicEvents(); // Initialize Mic Logic
+            },
+
+            setupVoice: function() {
+                this.speech.lang = 'en-GB'; 
+                this.speech.rate = 0.9;
+                window.speechSynthesis.onvoiceschanged = () => {
+                    const voices = window.speechSynthesis.getVoices();
+                    const maleUK = voices.find(v => (v.lang.includes('GB') || v.lang.includes('UK')) && v.name.includes('Male'));
+                    if(maleUK) this.speech.voice = maleUK;
+                };
+            },
+
+            // --- REAL MIC LOGIC ---
+            setupMicEvents: function() {
+                const btn = document.getElementById('mic-btn');
+
+                // Mouse Events (PC)
+                btn.addEventListener('mousedown', (e) => this.startRecording(e));
+                btn.addEventListener('mouseup', (e) => this.stopRecording(e));
+                btn.addEventListener('mouseleave', (e) => {
+                    if(this.mediaRecorder && this.mediaRecorder.state === 'recording') this.stopRecording(e);
+                });
+
+                // Touch Events (Mobile)
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // Prevent ghost clicks
+                    this.startRecording(e);
+                });
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.stopRecording(e);
+                });
+            },
+
+            startRecording: async function(e) {
+                if(!this.isUserTurn || document.getElementById('mic-btn').classList.contains('disabled')) return;
+
+                try {
+                    // Request Mic Access (First time will ask permission)
+                    if (!this.stream) {
+                        this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    }
+
+                    this.mediaRecorder = new MediaRecorder(this.stream);
+                    this.audioChunks = [];
+
+                    this.mediaRecorder.addEventListener("dataavailable", event => {
+                        this.audioChunks.push(event.data);
+                    });
+
+                    this.mediaRecorder.addEventListener("stop", () => {
+                        this.processAudio();
+                    });
+
+                    this.mediaRecorder.start();
+                    
+                    // UI Update
+                    document.getElementById('mic-btn').classList.add('active');
+                    document.getElementById('instruction-text').innerText = "Recording... Release to Send";
+                    document.getElementById('instruction-text').classList.add('recording');
+
+                } catch (err) {
+                    alert("Error: Microphone access denied. Please allow microphone permissions in your browser settings.");
+                    console.error(err);
+                }
+            },
+
+            stopRecording: function(e) {
+                if(this.mediaRecorder && this.mediaRecorder.state === "recording") {
+                    this.mediaRecorder.stop();
+                    
+                    // UI Update
+                    document.getElementById('mic-btn').classList.remove('active');
+                    document.getElementById('instruction-text').classList.remove('recording');
+                    document.getElementById('instruction-text').innerText = "Processing...";
+                }
+            },
+
+            processAudio: function() {
+                // Create Audio Blob
+                const audioBlob = new Blob(this.audioChunks, { type: "audio/mpeg" });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                // Add User Bubble with Audio Player
+                const line = this.currentScenario.dialogue[this.dialogueIndex];
+                this.addBubble('user', line.text, line.si, audioUrl);
+
+                // Play back what user said immediately
+                const userAudio = new Audio(audioUrl);
+                userAudio.play();
+
+                // Wait for playback to finish (roughly) then continue
+                userAudio.onended = () => {
+                    setTimeout(() => {
+                        this.dialogueIndex++;
+                        this.processStep();
+                    }, 1000);
+                };
+                
+                // Fallback if audio event fails or is short
+                setTimeout(() => {
+                    if(this.isUserTurn) { // Only force if state hasn't changed
+                        this.dialogueIndex++;
+                        this.processStep();
+                    }
+                }, 5000); // Max wait 5 sec
+            },
+
+            // --- CHAT FLOW ---
+            renderDashboard: function() {
+                const container = document.getElementById('scenario-container');
+                container.innerHTML = '';
+                scenarios.forEach(s => {
+                    const el = document.createElement('div');
+                    el.className = 'scenario-card';
+                    el.onclick = () => this.startScenario(s.id);
+                    el.innerHTML = `<div class="s-icon">${s.icon}</div><div class="s-info"><div class="s-title">${s.title}</div><div class="s-desc">${s.desc}</div></div><div class="s-status">START ▶</div>`;
+                    container.appendChild(el);
+                });
+            },
+
+            startScenario: function(id) {
+                this.currentScenario = scenarios.find(s => s.id === id);
+                this.dialogueIndex = 0;
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('conversation-screen').style.display = 'flex';
+                document.getElementById('chat-partner').innerText = "Liam (Boss)";
+                document.getElementById('chat-box').innerHTML = '';
+                this.processStep();
+            },
+
+            closeChat: function() {
+                window.speechSynthesis.cancel();
+                document.getElementById('conversation-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'flex';
+                // Stop mic stream to release icon
+                if(this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+            },
+
+            processStep: function() {
+                if(this.dialogueIndex >= this.currentScenario.dialogue.length) {
+                    this.addBubble('bot', "Well done Nuwan! Job secured.", "නියමයි නුවන්! වැඩේ ගොඩ.");
+                    this.speak("Well done Nuwan! Job secured.");
+                    document.getElementById('mic-btn').classList.add('disabled');
+                    document.getElementById('instruction-text').innerText = "Chat Finished ✅";
+                    return;
+                }
+
+                const line = this.currentScenario.dialogue[this.dialogueIndex];
+
+                if(line.role === 'bot') {
+                    this.isUserTurn = false;
+                    document.getElementById('mic-btn').classList.add('disabled');
+                    document.getElementById('instruction-text').innerText = "Listen to Liam...";
+                    
+                    this.addBubble('bot', line.text, line.si);
+                    this.speak(line.text, () => {
+                        this.dialogueIndex++;
+                        setTimeout(() => this.processStep(), 500);
+                    });
+                } else {
+                    this.isUserTurn = true;
+                    document.getElementById('mic-btn').classList.remove('disabled');
+                    document.getElementById('instruction-text').innerText = "HOLD Mic & Speak!";
+                }
+            },
+
+            addBubble: function(role, text, siTranslation, audioUrl = null) {
+                const box = document.getElementById('chat-box');
+                const div = document.createElement('div');
+                div.className = `bubble ${role}`;
+                
+                let audioHtml = '';
+                if(audioUrl) {
+                    audioHtml = `<audio controls src="${audioUrl}" class="audio-player-bubble"></audio>`;
+                }
+
+                div.innerHTML = `${text} <span class="si-translation">${siTranslation}</span> ${audioHtml}`;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+            },
+
+            speak: function(text, callback) {
+                window.speechSynthesis.cancel();
+                this.speech.text = text;
+                this.speech.onend = callback || null;
+                window.speechSynthesis.speak(this.speech);
+            },
+
+            replayAudio: function() {
+                if(this.isUserTurn && this.dialogueIndex > 0) {
+                     const prevLine = this.currentScenario.dialogue[this.dialogueIndex - 1];
+                     this.speak(prevLine.text);
+                }
+            },
+
+            showHelp: function() {
+                if(!this.isUserTurn) return;
+                const line = this.currentScenario.dialogue[this.dialogueIndex];
+                this.speak(line.text);
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
