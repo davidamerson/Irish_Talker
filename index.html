@@ -3,636 +3,633 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRISH TALKER - FIXED EDITION</title>
+    <title>IRISH TALKER - ULTIMATE 20</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
         :root {
-            --bg: #0f172a; 
-            --panel: #1e293b; 
-            --accent: #0ea5e9; /* Sky Blue */
-            --user-bubble: #059669; /* Green */
-            --bot-bubble: #334155; 
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
             --text: #f8fafc;
-            --record: #ef4444;
+            --bot-bubble: #334155;
+            --user-bubble: #059669;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* DASHBOARD */
+        #dashboard { flex: 1; padding: 15px; overflow-y: auto; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 1px solid #334155; margin-bottom: 15px; }
+        .title { font-size: 24px; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
+        .subtitle { font-size: 13px; color: #94a3b8; margin-top: 5px; }
         
-        body { 
-            font-family: 'Roboto', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-        }
+        .scenario-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; align-items: center; border: 1px solid #334155; cursor: pointer; transition: 0.2s; }
+        .card:active { background: #475569; transform: scale(0.98); }
+        .icon { font-size: 28px; margin-right: 15px; min-width: 40px; text-align: center; }
+        .info { flex: 1; }
+        .s-title { font-weight: bold; font-size: 15px; }
+        .s-desc { font-size: 11px; color: #94a3b8; }
+        .badge { font-size: 10px; background: rgba(56, 189, 248, 0.1); color: var(--accent); padding: 3px 8px; border-radius: 4px; font-weight: bold; }
 
-        /* --- DASHBOARD --- */
-        .header { 
-            padding: 20px; 
-            text-align: center; 
-            background: #020617; 
-            border-bottom: 1px solid #334155; 
-            flex-shrink: 0;
-        }
-        .app-name { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: 1px; }
-        .app-sub { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+        /* CHAT SCREEN */
+        #chat-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: none; flex-direction: column; z-index: 100; }
+        .nav { padding: 12px; background: #020617; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; }
+        .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 5px; }
+        .progress { font-size: 12px; font-weight: bold; color: var(--accent); }
 
-        #dashboard { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-        }
-
-        .card { 
-            background: var(--panel); 
-            padding: 15px 20px; 
-            border-radius: 12px; 
-            display: flex; 
-            align-items: center; 
-            border: 1px solid #334155; 
-            cursor: pointer; 
-            transition: 0.2s; 
-        }
-        .card:active { transform: scale(0.98); background: #334155; }
+        .chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        .bubble { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.5; position: relative; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        .card-num { 
-            font-size: 14px; font-weight: bold; color: #64748b; margin-right: 15px; 
-            min-width: 25px;
+        .bot { align-self: flex-start; background: var(--bot-bubble); border-bottom-left-radius: 2px; }
+        .user { align-self: flex-end; background: var(--user-bubble); border-bottom-right-radius: 2px; text-align: right; }
+        .si { font-size: 12px; color: #cbd5e1; display: block; margin-top: 4px; font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
+        .hint { font-size: 11px; color: #fcd34d; display: block; margin-top: 4px; font-weight: bold; }
+
+        /* FEEDBACK BOX */
+        .feedback { 
+            background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 12px; margin-top: 5px; display: none; text-align: left;
         }
-        .card-info { flex: 1; }
-        .card-title { font-weight: bold; font-size: 15px; margin-bottom: 2px; }
-        .card-desc { font-size: 11px; color: #94a3b8; }
-        .card-status { font-size: 18px; color: var(--accent); }
+        .fb-said { color: #fca5a5; display: block; margin-bottom: 3px; }
+        .fb-correct { color: #86efac; display: block; font-weight: bold; }
 
-        /* --- CHAT INTERFACE --- */
-        #chat-screen { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg); display: none; flex-direction: column; z-index: 100; 
-        }
+        /* CONTROLS */
+        .controls { padding: 20px; background: #020617; border-top: 1px solid #334155; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .status { font-size: 14px; font-weight: bold; color: #94a3b8; min-height: 20px; text-align: center; }
+        .status.listening { color: var(--accent); animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
 
-        .chat-nav { 
-            padding: 10px 15px; background: #020617; border-bottom: 1px solid #334155; 
-            display: flex; align-items: center; flex-shrink: 0;
-        }
-        .back-btn { background: none; border: none; color: white; font-size: 24px; padding: 10px; cursor: pointer; }
-        
-        .progress-container { flex: 1; margin: 0 15px; }
-        .progress-label { font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; margin-bottom: 3px;}
-        .progress-track { height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+        .mic-btn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent); border: none; font-size: 32px; cursor: pointer; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .mic-btn:active { transform: scale(0.9); background: var(--success); }
+        .mic-btn.active { background: var(--error); box-shadow: 0 0 30px rgba(239, 68, 68, 0.5); color: white; }
+        .mic-btn.disabled { background: #334155; opacity: 0.5; pointer-events: none; box-shadow: none; }
 
-        .chat-box { 
-            flex: 1; overflow-y: auto; padding: 20px; 
-            display: flex; flex-direction: column; gap: 20px; 
-            background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px;
-        }
-
-        .bubble { 
-            max-width: 85%; padding: 14px 18px; border-radius: 18px; 
-            font-size: 15px; line-height: 1.5; position: relative; animation: slideUp 0.3s ease; 
-        }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .bot { align-self: flex-start; background: var(--bot-bubble); border-bottom-left-radius: 4px; border: 1px solid #475569; }
-        .user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 4px; text-align: right; }
-
-        .si-text { display: block; font-size: 12px; color: #cbd5e1; margin-top: 6px; font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
-        .hint-text { display: block; font-size: 11px; color: #fcd34d; margin-top: 5px; font-weight: bold; }
-        
-        .audio-player { width: 100%; height: 30px; margin-top: 8px; filter: invert(1); opacity: 0.7; }
-
-        /* --- CONTROLS --- */
-        .controls { 
-            padding: 20px; background: #020617; border-top: 1px solid #334155; 
-            display: flex; flex-direction: column; align-items: center; gap: 15px; flex-shrink: 0;
-        }
-
-        .status-msg { font-size: 14px; color: #94a3b8; font-weight: bold; min-height: 20px; text-align: center; }
-        .status-msg.rec { color: var(--record); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .mic-wrapper { position: relative; width: 85px; height: 85px; display: flex; justify-content: center; align-items: center; }
-        
-        .mic-btn { 
-            width: 85px; height: 85px; border-radius: 50%; background: var(--accent); 
-            border: none; color: #0f172a; font-size: 36px; cursor: pointer; z-index: 2; 
-            box-shadow: 0 0 25px rgba(14, 165, 233, 0.4); transition: 0.2s; 
-            display: flex; align-items: center; justify-content: center;
-        }
-        .mic-btn:active, .mic-btn.active { transform: scale(1.15); background: var(--record); color: white; box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); }
-        .mic-btn.disabled { background: #334155; color: #64748b; pointer-events: none; box-shadow: none; transform: scale(1); }
-
-        .buttons-row { display: flex; width: 100%; gap: 10px; }
-        .btn-small { flex: 1; padding: 12px; background: var(--panel); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
-        .btn-small:active { background: #334155; }
+        .btn-row { display: flex; gap: 10px; width: 100%; }
+        .btn-sub { flex: 1; padding: 12px; background: var(--card); border: 1px solid #334155; color: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .btn-skip { background: #334155; color: #94a3b8; }
 
     </style>
 </head>
 <body>
 
-    <!-- SCREEN 1: DASHBOARD -->
     <div id="dashboard">
         <div class="header">
-            <div class="app-name">IRISH TALKER <span style="font-size:12px; color:white; background:var(--record); padding:2px 6px; border-radius:4px;">FIXED</span></div>
-            <div class="app-sub">Complete Spoken English Training System</div>
+            <div class="title">IRISH TALKER</div>
+            <div class="subtitle">Ultimate Training (20 Scenarios)</div>
         </div>
-        <div id="card-list"></div>
+        <div id="list" class="scenario-list"></div>
     </div>
 
-    <!-- SCREEN 2: CHAT -->
     <div id="chat-screen">
-        <div class="chat-nav">
+        <div class="nav">
             <button class="back-btn" onclick="app.close()">←</button>
-            <div class="progress-container">
-                <div class="progress-label">
-                    <span id="level-title">Interview</span>
-                    <span id="step-count">0/15</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+            <div id="level-info" style="text-align:center;">
+                <div id="lvl-title" style="font-weight:bold; font-size:14px;">...</div>
+                <div id="lvl-prog" class="progress">0 / 20</div>
             </div>
+            <div style="width:24px;"></div>
         </div>
-
-        <div class="chat-box" id="chat-box"></div>
+        
+        <div id="chat-box" class="chat-box"></div>
 
         <div class="controls">
-            <div class="status-msg" id="status-text">Initializing...</div>
-            
-            <div class="mic-wrapper">
-                <button id="mic-btn" class="mic-btn">🎙️</button>
-            </div>
-
-            <div class="buttons-row">
-                <button class="btn-small" onclick="app.replayBot()">🔊 Replay</button>
-                <button class="btn-small" onclick="app.showHelp()">🆘 Help</button>
+            <div id="status" class="status">Initializing...</div>
+            <button id="mic" class="mic-btn">🎙️</button>
+            <div class="btn-row">
+                <button class="btn-sub" onclick="app.replayBot()">🔊 Replay</button>
+                <button class="btn-sub" onclick="app.showAnswer()">🆘 Answer</button>
+                <button class="btn-sub btn-skip" onclick="app.skip()" id="btn-skip" style="display:none;">Skip ▶</button>
             </div>
         </div>
     </div>
 
     <script>
-    // --- APP ENGINE ---
-    const app = {
-        data: [],
-        activeScenario: null,
-        stepIndex: 0,
-        synth: window.speechSynthesis,
-        mediaRecorder: null,
-        chunks: [],
-        stream: null,
+        // --- APP ENGINE ---
+        const app = {
+            data: [], // Filled by PART 2
+            activeScenario: null,
+            index: 0,
+            synth: window.speechSynthesis,
+            recognition: null,
+            isListening: false,
 
-        startApp: function() {
-            this.renderDashboard();
-            this.setupMic();
-            if(this.synth.onvoiceschanged !== undefined) {
-                this.synth.onvoiceschanged = () => this.loadVoices();
-            }
-            this.loadVoices();
-        },
+            // Call this to boot up
+            init: function() {
+                this.renderDashboard();
+                this.setupVoice();
+                this.setupRecognition();
+            },
 
-        loadVoices: function() {
-            const voices = this.synth.getVoices();
-            this.voice = voices.find(v => (v.lang.includes('GB') || v.lang.includes('UK')) && v.name.includes('Male')) || voices[0];
-        },
+            setupVoice: function() {
+                if(this.synth.onvoiceschanged !== undefined) {
+                    this.synth.onvoiceschanged = () => {
+                        const voices = this.synth.getVoices();
+                        // Try to get a UK Male Voice
+                        this.voice = voices.find(v => (v.lang.includes('GB') || v.lang.includes('UK')) && v.name.includes('Male')) || voices[0];
+                    };
+                }
+            },
 
-        renderDashboard: function() {
-            const list = document.getElementById('card-list');
-            list.innerHTML = '';
-            this.data.forEach((item, index) => {
-                const el = document.createElement('div');
-                el.className = 'card';
-                el.onclick = () => this.openScenario(index);
-                el.innerHTML = `
-                    <div class="card-num">#${index + 1}</div>
-                    <div class="card-info">
-                        <div class="card-title">${item.title}</div>
-                        <div class="card-desc">${item.desc}</div>
-                    </div>
-                    <div class="card-status">▶</div>
-                `;
-                list.appendChild(el);
-            });
-        },
+            setupRecognition: function() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.lang = 'en-GB'; // Expect British/Irish English
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
 
-        openScenario: function(index) {
-            this.activeScenario = this.data[index];
-            this.stepIndex = 0;
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('chat-screen').style.display = 'flex';
-            document.getElementById('level-title').innerText = this.activeScenario.title;
-            document.getElementById('chat-box').innerHTML = '';
-            this.runStep();
-        },
+                    this.recognition.onstart = () => {
+                        this.isListening = true;
+                        document.getElementById('mic').classList.add('active');
+                        document.getElementById('status').innerText = "Listening...";
+                        document.getElementById('status').classList.add('listening');
+                    };
 
-        close: function() {
-            this.synth.cancel();
-            if(this.stream) {
-                this.stream.getTracks().forEach(track => track.stop());
-                this.stream = null;
-            }
-            document.getElementById('chat-screen').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'flex';
-        },
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        document.getElementById('mic').classList.remove('active');
+                        document.getElementById('status').classList.remove('listening');
+                    };
 
-        runStep: function() {
-            const total = this.activeScenario.dialogue.length;
-            document.getElementById('step-count').innerText = `${this.stepIndex}/${total}`;
-            document.getElementById('progress-bar').style.width = `${(this.stepIndex / total) * 100}%`;
+                    this.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        this.checkAnswer(transcript);
+                    };
 
-            if(this.stepIndex >= total) {
-                this.addBubble('bot', "Excellent job! Scenario completed.", "නියමයි! කොටස අවසන්.");
-                this.speak("Excellent job! Scenario completed.");
-                this.setMicState(false, "Finished ✅");
-                return;
-            }
+                    this.recognition.onerror = (event) => {
+                        document.getElementById('status').innerText = "Tap mic again.";
+                        document.getElementById('btn-skip').style.display = 'block'; // Show skip on error
+                    };
+                } else {
+                    alert("Voice features require Google Chrome.");
+                }
+            },
 
-            const line = this.activeScenario.dialogue[this.stepIndex];
-
-            if(line.role === 'bot') {
-                this.setMicState(false, "Listen to Liam...");
-                this.addBubble('bot', line.text, line.si);
-                this.speak(line.text, () => {
-                    this.stepIndex++;
-                    setTimeout(() => this.runStep(), 800);
+            // --- UI FUNCTIONS ---
+            renderDashboard: function() {
+                const list = document.getElementById('list');
+                list.innerHTML = '';
+                this.data.forEach((s, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    el.onclick = () => this.startScenario(i);
+                    el.innerHTML = `
+                        <div class="icon">${s.icon}</div>
+                        <div class="info">
+                            <div class="s-title">${s.title}</div>
+                            <div class="s-desc">${s.desc}</div>
+                        </div>
+                        <div class="badge">START</div>
+                    `;
+                    list.appendChild(el);
                 });
-            } else {
-                this.setMicState(true, "Hold Mic & Speak");
-            }
-        },
+            },
 
-        addBubble: function(role, text, si, audioUrl) {
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            div.className = `bubble ${role}`;
-            let html = `<div>${text}</div><div class="si-text">${si}</div>`;
-            if(role === 'user' && this.activeScenario.dialogue[this.stepIndex].hint) {
-                html += `<div class="hint-text">Tip: ${this.activeScenario.dialogue[this.stepIndex].hint}</div>`;
-            }
-            if(audioUrl) {
-                html += `<audio controls src="${audioUrl}" class="audio-player"></audio>`;
-            }
-            div.innerHTML = html;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        },
+            startScenario: function(index) {
+                this.activeScenario = this.data[index];
+                this.index = 0;
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'flex';
+                document.getElementById('lvl-title').innerText = this.activeScenario.title;
+                document.getElementById('chat-box').innerHTML = '';
+                document.getElementById('btn-skip').style.display = 'none';
+                
+                this.runStep();
+            },
 
-        speak: function(text, callback) {
-            this.synth.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.voice = this.voice;
-            u.rate = 0.9;
-            u.onend = callback || null;
-            this.synth.speak(u);
-        },
+            close: function() {
+                this.synth.cancel();
+                document.getElementById('chat-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'flex';
+            },
 
-        setMicState: function(enabled, msg) {
-            const btn = document.getElementById('mic-btn');
-            const txt = document.getElementById('status-text');
-            txt.innerText = msg;
-            if(enabled) {
-                btn.classList.remove('disabled');
-            } else {
-                btn.classList.add('disabled');
-                txt.classList.remove('rec');
-            }
-        },
+            // --- GAME LOOP ---
+            runStep: function() {
+                const total = this.activeScenario.dialogue.length;
+                document.getElementById('lvl-prog').innerText = `${this.index} / ${total}`;
 
-        setupMic: function() {
-            const btn = document.getElementById('mic-btn');
-            const status = document.getElementById('status-text');
-
-            const start = async (e) => {
-                if(e.cancelable) e.preventDefault();
-                if(btn.classList.contains('disabled')) return;
-                try {
-                    if (!this.stream) this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    this.mediaRecorder = new MediaRecorder(this.stream);
-                    this.chunks = [];
-                    this.mediaRecorder.ondataavailable = e => this.chunks.push(e.data);
-                    this.mediaRecorder.onstop = () => this.processAudio();
-                    this.mediaRecorder.start();
-                    btn.classList.add('active');
-                    status.innerText = "Recording...";
-                    status.classList.add('rec');
-                } catch(err) {
-                    alert("Allow Microphone Access!");
+                // Check Completion
+                if(this.index >= total) {
+                    this.addBubble('bot', "Conversation Finished! Well done.", "සංවාදය අවසන්.");
+                    this.speak("Conversation Finished! Well done.");
+                    this.setMicState(false, "Done ✅");
+                    return;
                 }
-            };
 
-            const stop = (e) => {
-                if(e.cancelable) e.preventDefault();
-                if(this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-                    this.mediaRecorder.stop();
-                    btn.classList.remove('active');
-                    status.classList.remove('rec');
-                    status.innerText = "Processing...";
+                const line = this.activeScenario.dialogue[this.index];
+
+                if(line.r === 'b') {
+                    // Bot Turn
+                    this.setMicState(false, "Listen...");
+                    this.addBubble('bot', line.t, line.s);
+                    this.speak(line.t, () => {
+                        this.index++;
+                        setTimeout(() => this.runStep(), 800);
+                    });
+                } else {
+                    // User Turn
+                    this.setMicState(true, "Tap Mic & Answer");
                 }
-            };
+            },
 
-            btn.addEventListener('mousedown', start);
-            btn.addEventListener('mouseup', stop);
-            btn.addEventListener('mouseleave', stop);
-            btn.addEventListener('touchstart', start);
-            btn.addEventListener('touchend', stop);
-        },
-
-        // FIXED: ADDED SAFETY TIMER TO PREVENT FREEZING
-        processAudio: function() {
-            const blob = new Blob(this.chunks, { type: 'audio/ogg' });
-            const url = URL.createObjectURL(blob);
-            const line = this.activeScenario.dialogue[this.stepIndex];
-
-            this.addBubble('user', line.text, line.si, url);
-            document.getElementById('status-text').innerText = "Good!";
-            
-            // Auto play
-            const a = new Audio(url);
-            
-            // Safety mechanism: Ensure we advance even if audio fails or is too short
-            let advanced = false;
-            const advance = () => {
-                if(advanced) return;
-                advanced = true;
-                this.stepIndex++;
-                setTimeout(() => this.runStep(), 1000);
-            };
-
-            a.onend = advance;
-            a.onerror = advance;
-            
-            // Force advance after 4 seconds max (Safety Timer)
-            setTimeout(advance, 4000);
-            
-            a.play().catch(e => console.log("Autoplay blocked"));
-        },
-
-        replayBot: function() {
-            let i = this.stepIndex - 1;
-            if(i < 0) return;
-            while(i >= 0) {
-                if(this.activeScenario.dialogue[i].role === 'bot') {
-                    this.speak(this.activeScenario.dialogue[i].text);
-                    break;
+            checkAnswer: function(spoken) {
+                const target = this.activeScenario.dialogue[this.index].hint;
+                
+                // Compare (Simple Keyword Match)
+                const s1 = spoken.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+                const s2 = target.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+                
+                let match = false;
+                // 1. Exact match
+                if (s1 === s2) match = true;
+                // 2. Contains match
+                else if (s1.includes(s2)) match = true;
+                // 3. Keyword match (if 50% of words match)
+                else {
+                    const tWords = s2.split(" ");
+                    let hits = 0;
+                    tWords.forEach(w => { if(s1.includes(w) && w.length > 2) hits++; });
+                    if(hits >= Math.ceil(tWords.length / 2)) match = true;
                 }
-                i--;
+
+                // Add User Bubble with Feedback
+                const box = document.getElementById('chat-box');
+                const div = document.createElement('div');
+                div.className = 'bubble user';
+                div.innerHTML = `
+                    <div>${spoken}</div>
+                    <div class="feedback" style="display:block; border-color:${match ? 'var(--success)' : 'var(--error)'}">
+                        <span class="fb-said">Said: "${spoken}"</span>
+                        <span class="fb-correct">Target: "${target}"</span>
+                        <div style="margin-top:5px; font-weight:bold; color:${match ? 'var(--success)' : 'var(--error)'}">
+                            ${match ? 'CORRECT ✅' : 'TRY AGAIN ❌'}
+                        </div>
+                    </div>
+                `;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+
+                if(match) {
+                    setTimeout(() => {
+                        this.index++;
+                        this.runStep();
+                    }, 1500);
+                } else {
+                    this.speak("Try again. Say: " + target);
+                    document.getElementById('btn-skip').style.display = 'block';
+                }
+            },
+
+            // --- HELPERS ---
+            addBubble: function(role, text, si) {
+                const box = document.getElementById('chat-box');
+                const div = document.createElement('div');
+                div.className = `bubble ${role === 'b' ? 'bot' : 'user'}`;
+                
+                let html = `<div>${text}</div><span class="si">${si}</span>`;
+                if(role === 'u' && this.activeScenario.dialogue[this.index].hint) {
+                    html += `<span class="hint">Tip: ${this.activeScenario.dialogue[this.index].hint}</span>`;
+                }
+                div.innerHTML = html;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+            },
+
+            speak: function(text, callback) {
+                this.synth.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.voice = this.voice;
+                u.rate = 0.9;
+                u.onend = callback || null;
+                this.synth.speak(u);
+            },
+
+            setMicState: function(enabled, msg) {
+                const btn = document.getElementById('mic');
+                document.getElementById('status').innerText = msg;
+                if(enabled) {
+                    btn.classList.remove('disabled');
+                    btn.onclick = () => {
+                        if(this.isListening) this.recognition.stop();
+                        else this.recognition.start();
+                    };
+                } else {
+                    btn.classList.add('disabled');
+                    btn.onclick = null;
+                }
+            },
+
+            replayBot: function() {
+                if(this.index > 0) this.speak(this.activeScenario.dialogue[this.index - 1].t);
+            },
+
+            showAnswer: function() {
+                const line = this.activeScenario.dialogue[this.index];
+                alert("Say: " + line.hint);
+                this.speak(line.hint);
+            },
+
+            skip: function() {
+                const line = this.activeScenario.dialogue[this.index];
+                // Manually add correct bubble to move on
+                this.addBubble('user', line.hint, "Skipped"); 
+                this.index++;
+                this.runStep();
             }
-        },
+        };
 
-        showHelp: function() {
-            const line = this.activeScenario.dialogue[this.stepIndex];
-            if(line.role === 'user') this.speak(line.text);
-        }
-    };
+        // =======================================================
+        // PART 2: PASTE THE DATA ARRAY BELOW THIS LINE
+        // =======================================================
 
-    // =============================================
-    // DATA SECTION (Boss changed to Sir)
-    // =============================================
-    const scenarios = [
-        // --- 1. THE BIG INTERVIEW ---
+const scenarios = [
+        // =================================================================
+        // SECTION 1: CONSTRUCTION & TECHNICAL WORK (වැඩබිම)
+        // =================================================================
+
+        // --- 1. THE BIG JOB INTERVIEW ---
         {
-            id: 1, title: "1. The Job Interview", icon: "👔", desc: "Full Interview Simulation",
+            id: 1, title: "1. Job Interview", icon: "👔", desc: "Detailed interview questions.",
             dialogue: [
-                { role: 'bot', text: "Good morning. Please come in and sit down.", si: "සුභ උදෑසනක්. ඇතුලට ඇවිත් වාඩි වෙන්න." },
-                { role: 'user', text: "Good morning sir. Thank you.", si: "සුභ උදෑසනක් සර්. ස්තූතියි.", hint: "Good morning sir." },
-                { role: 'bot', text: "I have your CV here. Can you introduce yourself?", si: "ඔයාගේ CV එක මං ළඟ තියෙනවා. ඔයා ගැන පොඩ්ඩක් කියන්න." },
-                { role: 'user', text: "I am Nuwan. I have 15 years experience in construction.", si: "මම නුවන්. මට ඉදිකිරීම් ක්ෂේත්‍රයේ අවුරුදු 15ක පලපුරුද්ද තියෙනවා.", hint: "I am Nuwan. 15 years experience." },
-                { role: 'bot', text: "That is a lot. What is your main trade?", si: "ඒක ගොඩක්නේ. ඔයාගේ ප්‍රධානම රස්සාව මොකක්ද?" },
-                { role: 'user', text: "I am a multi-skilled technician. Mainly Welding and Steel Fixing.", si: "මම බහු-නිපුණතා ශිල්පියෙක්. ප්‍රධාන වශයෙන් වෑල්ඩින් සහ යකඩ බැඳීම.", hint: "Multi-skilled. Welding and Steel Fixing." },
-                { role: 'bot', text: "What type of welding can you do?", si: "මොන වගේ වෑල්ඩින් ද ඔයාට පුළුවන්?" },
-                { role: 'user', text: "I am an expert in Arc Welding and heavy steel fabrication.", si: "මම ආක් වෑල්ඩින් සහ බර යකඩ වැඩ වලට දක්ෂයි.", hint: "Expert in Arc Welding." },
-                { role: 'bot', text: "Can you read technical drawings and blueprints?", si: "ඔයාට ටෙක්නිකල් ඩ්‍රෝවින්ග්ස් සහ ප්ලෑන් කියවන්න පුළුවන්ද?" },
-                { role: 'user', text: "Yes sir. I can read plans and work without supervision.", si: "ඔව් සර්. මට ප්ලෑන් කියවලා තනියම වැඩ කරන්න පුළුවන්.", hint: "Yes sir, I can read plans." },
-                { role: 'bot', text: "Do you have experience with concrete?", si: "කොන්ක්‍රීට් එක්ක වැඩ කරලා තියෙනවද?" },
-                { role: 'user', text: "Yes, I can do pouring, vibrating, and leveling.", si: "ඔව්, මට වත් කරන්න, වයිබ්‍රේට් කරන්න සහ ලෙවල් කරන්න පුළුවන්.", hint: "Pouring, vibrating, and leveling." },
-                { role: 'bot', text: "Do you have a heavy vehicle license?", si: "බර වාහන බලපත්‍රයක් තියෙනවද?" },
-                { role: 'user', text: "Yes, I have a valid heavy vehicle license.", si: "ඔව්, මට වලංගු බලපත්‍රයක් තියෙනවා.", hint: "Yes, I have a license." },
-                { role: 'bot', text: "Why do you want to work in Ireland?", si: "ඇයි අයර්ලන්තයේ වැඩ කරන්න කැමති?" },
-                { role: 'user', text: "I want to work hard and build a better future.", si: "මට මහන්සි වෙලා වැඩ කරලා හොඳ අනාගතයක් හදන්න ඕනා.", hint: "Work hard for better future." },
-                { role: 'bot', text: "Okay Nuwan. When can you start?", si: "හරි නුවන්. කවදද පටන් ගන්න පුළුවන්?" },
-                { role: 'user', text: "I can start immediately after my visa is ready.", si: "වීසා හම්බුන ගමන් මට පටන් ගන්න පුළුවන්.", hint: "Immediately after visa." },
-                { role: 'bot', text: "Great. We will let you know soon.", si: "නියමයි. අපි ඉක්මනට දන්වන්නම්." },
-                { role: 'user', text: "Thank you for your time sir.", si: "ඔබේ කාලයට ස්තූතියි සර්.", hint: "Thank you for your time sir." }
+                { r: 'b', t: "Good morning. Please come in and take a seat.", s: "සුභ උදෑසනක්. ඇතුලට ඇවිත් වාඩි වෙන්න." },
+                { r: 'u', t: "Good morning sir. Thank you.", s: "සුභ උදෑසනක් සර්. ස්තූතියි.", hint: "Good morning sir" },
+                { r: 'b', t: "I have your CV here. Can you introduce yourself?", s: "ඔයාගේ CV එක මං ළඟ තියෙනවා. ඔයා ගැන කියන්න." },
+                { r: 'u', t: "I am Nuwan. I have 15 years of construction experience.", s: "මම නුවන්. මට අවුරුදු 15ක පලපුරුද්ද තියෙනවා.", hint: "Nuwan. 15 years experience" },
+                { r: 'b', t: "That is impressive. What is your main trade?", s: "ඒක හොඳයි. ඔයාගේ ප්‍රධාන රස්සාව මොකක්ද?" },
+                { r: 'u', t: "I am a multi-skilled technician. I do welding and steel fixing.", s: "මම බහු-නිපුණතා ශිල්පියෙක්. මම වෑල්ඩින් සහ යකඩ බඳිනවා.", hint: "Multi-skilled. Welding and steel fixing" },
+                { r: 'b', t: "What kind of welding experience do you have?", s: "මොන වගේ වෑල්ඩින් පලපුරුද්දක්ද තියෙන්නේ?" },
+                { r: 'u', t: "I am an expert in Arc Welding and structural steel.", s: "මම ආක් වෑල්ඩින් සහ යකඩ ස්ට්‍රක්චර් වලට දක්ෂයි.", hint: "Expert in Arc Welding" },
+                { r: 'b', t: "Can you read technical drawings and blueprints?", s: "ඔයාට ප්ලෑන් කියවන්න පුළුවන්ද?" },
+                { r: 'u', t: "Yes sir. I can read plans and work independently.", s: "ඔව් සර්. මට ප්ලෑන් කියවලා තනියම වැඩ කරන්න පුළුවන්.", hint: "Yes, read plans independently" },
+                { r: 'b', t: "What about concrete work? Can you do that?", s: "කොන්ක්‍රීට් වැඩ ගැන කොහොමද? පුළුවන්ද?" },
+                { r: 'u', t: "Yes, I can pour, vibrate and level concrete.", s: "ඔව්, මට වත් කරන්න, වයිබ්‍රේට් කරන්න සහ ලෙවල් කරන්න පුළුවන්.", hint: "Pour, vibrate and level" },
+                { r: 'b', t: "Do you hold a heavy vehicle driving license?", s: "බර වාහන බලපත්‍රයක් තියෙනවද?" },
+                { r: 'u', t: "Yes, I have a valid heavy vehicle license.", s: "ඔව්, මට වලංගු බර වාහන බලපත්‍රයක් තියෙනවා.", hint: "Yes valid license" },
+                { r: 'b', t: "Why do you want to work in Ireland?", s: "ඇයි අයර්ලන්තයේ වැඩ කරන්න ඕන?" },
+                { r: 'u', t: "To work hard, earn money and build a future.", s: "මහන්සි වෙලා වැඩ කරලා, සල්ලි හොයලා අනාගතයක් හදන්න.", hint: "Work hard earn money" },
+                { r: 'b', t: "Excellent. When can you start working?", s: "නියමයි. කවදද පටන් ගන්න පුළුවන්?" },
+                { r: 'u', t: "I can start immediately after I get my visa.", s: "වීසා හම්බුන ගමන් මට පටන් ගන්න පුළුවන්.", hint: "Immediately after visa" },
+                { r: 'b', t: "Okay Nuwan. We will contact you soon.", s: "හරි නුවන්. අපි ඉක්මනට කතා කරන්නම්." },
+                { r: 'u', t: "Thank you for your time sir.", s: "ඔබේ කාලයට ස්තූතියි සර්.", hint: "Thank you sir" }
             ]
         },
 
-        // --- 2. FIRST DAY INDUCTION ---
+        // --- 2. SITE INDUCTION (SAFETY) ---
         {
-            id: 2, title: "2. Site Induction", icon: "🚧", desc: "Safety rules and meeting the foreman.",
+            id: 2, title: "2. Safety Induction", icon: "🚧", desc: "Safety rules and PPE check.",
             dialogue: [
-                { role: 'bot', text: "Welcome to the site Nuwan. I am the Site Manager.", si: "සයිට් එකට සාදරයෙන් පිළිගන්නවා. මම සයිට් මැනේජර්." },
-                { role: 'user', text: "Good morning sir. Happy to be here.", si: "ගුඩ් මෝනින් සර්. මෙහේ ආපු එක සතුටක්.", hint: "Good morning sir." },
-                { role: 'bot', text: "First, do you have your Safe Pass card?", si: "ඉස්සෙල්ලාම, ඔයාගේ 'සේෆ් පාස්' කාඩ් එක තියෙනවද?" },
-                { role: 'user', text: "Yes, here is my Safe Pass card.", si: "ඔව්, මෙන්න මගේ කාඩ් එක.", hint: "Here is my Safe Pass." },
-                { role: 'bot', text: "Good. Do you have your PPE (Personal Protective Equipment)?", si: "හොඳයි. ඔයාගේ ආරක්ෂක ඇඳුම් (PPE) තියෙනවද?" },
-                { role: 'user', text: "Yes, I have my helmet, boots, and vest.", si: "ඔව්, මං ගාව හෙල්මට්, බූට් සහ ජැකට් එක තියෙනවා.", hint: "Helmet, boots, and vest." },
-                { role: 'bot', text: "On this site, safety is the number one rule.", si: "මේ සයිට් එකේ ආරක්ෂාව තමයි පළවෙනි නීතිය." },
-                { role: 'user', text: "I understand. Safety First is my motto.", si: "මට තේරෙනවා. ආරක්ෂාව පළමුව කියන එක තමයි මගේ ප්‍රතිපත්තිය.", hint: "Safety First is my motto." },
-                { role: 'bot', text: "If you see a hazard, you must report it.", si: "අනතුරක් දැක්කොත්, අනිවාර්යයෙන්ම කියන්න ඕනා." },
-                { role: 'user', text: "I will report any danger immediately.", si: "මම ඕනෑම අනතුරක් ඉක්මනට රිපෝට් කරන්නම්.", hint: "Report danger immediately." },
-                { role: 'bot', text: "Great. Now, go to the container and meet Mike.", si: "නියමයි. දැන් කන්ටේනර් එකට ගිහින් මයික්ව හම්බෙන්න." },
-                { role: 'user', text: "Okay, I will go find Mike now.", si: "හරි, මම දැන් මයික්ව හොයාගෙන යන්නම්.", hint: "Go find Mike now." }
+                { r: 'b', t: "Welcome to the site Nuwan. I am the Site Manager.", s: "සාදරයෙන් පිළිගන්නවා. මම සයිට් මැනේජර්." },
+                { r: 'u', t: "Good morning sir. Happy to be here.", s: "ගුඩ් මෝනින් සර්. මෙහේ ආපු එක සතුටක්.", hint: "Happy to be here" },
+                { r: 'b', t: "Do you have your Safe Pass card with you?", s: "ඔයාගේ සේෆ් පාස් කාඩ් එක තියෙනවද?" },
+                { r: 'u', t: "Yes sir, here is my Safe Pass card.", s: "ඔව් සර්, මෙන්න මගේ කාඩ් එක.", hint: "Here is my Safe Pass" },
+                { r: 'b', t: "Good. Now, where is your PPE?", s: "හොඳයි. කෝ ඔයාගේ ආරක්ෂක ඇඳුම් (PPE)?" },
+                { r: 'u', t: "I have my helmet, boots and vest in my bag.", s: "මගේ හෙල්මට්, බූට්, ජැකට් බෑග් එකේ තියෙනවා.", hint: "Helmet, boots and vest" },
+                { r: 'b', t: "Put them on. Safety is rule number one.", s: "ඒවා දාගන්න. ආරක්ෂාව තමයි අංක එක." },
+                { r: 'u', t: "I understand sir. Safety first.", s: "මට තේරෙනවා සර්. ආරක්ෂාව පළමුව.", hint: "I understand. Safety first" },
+                { r: 'b', t: "If you see a hazard, what do you do?", s: "අනතුරක් දැක්කොත් මොකද කරන්නේ?" },
+                { r: 'u', t: "I will stop work and report it immediately.", s: "මම වැඩ නවත්තලා ඒක වහාම රිපෝට් කරනවා.", hint: "Report it immediately" },
+                { r: 'b', t: "Correct. Do you know the fire assembly point?", s: "හරි. ගිනි ආරක්ෂක රැස්වෙන තැන දන්නවද?" },
+                { r: 'u', t: "Yes, it is at the main gate.", s: "ඔව්, ඒක තියෙන්නේ මේන් ගේට්ටුව ළඟ.", hint: "At the main gate" },
+                { r: 'b', t: "Do not smoke on site. Only in the smoking area.", s: "සයිට් එකේ දුම් බොන්න එපා. ඒ ඒරියා එකේ විතරයි." },
+                { r: 'u', t: "No problem sir. I do not smoke.", s: "ප්‍රශ්නයක් නෑ සර්. මම බොන්නේ නෑ.", hint: "I do not smoke" },
+                { r: 'b', t: "Great. Go find Mike in the container now.", s: "නියමයි. දැන් ගිහින් මයික්ව හම්බෙන්න." },
+                { r: 'u', t: "Okay sir. I will go now.", s: "හරි සර්. මම දැන් යන්නම්.", hint: "I will go now" }
             ]
         },
 
-        // --- 3. STEEL FIXING TASK ---
+        // --- 3. STEEL FIXING ---
         {
-            id: 3, title: "3. Steel Fixing", icon: "🏗️", desc: "Reading plans and tying steel.",
+            id: 3, title: "3. Steel Fixing Task", icon: "🏗️", desc: "Detailed rebar instructions.",
             dialogue: [
-                { role: 'bot', text: "Nuwan, look at this drawing for the column.", si: "නුවන්, මේ කණුවේ ප්ලෑන් එක බලන්න." },
-                { role: 'user', text: "Okay sir. Let me check the details.", si: "හරි සර්. මම විස්තර බලන්නම්.", hint: "Let me check details." },
-                { role: 'bot', text: "We need 4 main bars. What size is written there?", si: "අපිට මේන් බාර් 4ක් ඕනා. මොකක්ද සයිස් එක?" },
-                { role: 'user', text: "It says T16 bars for the main steel.", si: "මේකේ තියෙන්නේ T16 (මිලිමීටර් 16) කම්බි කියලා.", hint: "T16 bars." },
-                { role: 'bot', text: "Correct. And what about the links (stirrups)?", si: "හරි. එතකොට මුදු (ලින්ක්ස්) වලට?" },
-                { role: 'user', text: "Links are T10 bars at 200mm spacing.", si: "මුදු වලට T10 කම්බි, මිලිමීටර් 200 පරතරය.", hint: "T10 at 200mm spacing." },
-                { role: 'bot', text: "Do you have your tying wire and nips?", si: "ඔයා ගාව බඳින කම්බි සහ අඬුව තියෙනවද?" },
-                { role: 'user', text: "I have the nips, but I need wire.", si: "අඬුව තියෙනවා, ඒත් කම්බි ඕනා.", hint: "Have nips, need wire." },
-                { role: 'bot', text: "Grab a coil of wire from the store.", si: "ස්ටෝරුවෙන් කම්බි රෝලක් ගන්න." },
-                { role: 'user', text: "Okay. Do we need cover blocks?", si: "හරි. අපිට කවර් බ්ලොක්ස් ඕනද?" },
-                { role: 'bot', text: "Yes, use the 40mm spacers.", si: "ඔව්, 40mm ස්පේසර්ස් පාවිච්චි කරන්න." },
-                { role: 'user', text: "Understood. I will start fixing now.", si: "තේරුනා. මම දැන් බඳින්න ගන්නම්.", hint: "Start fixing now." }
+                { r: 'b', t: "Nuwan, I need you to fix steel for this column.", s: "නුවන්, මට ඕන ඔයා මේ කණුවේ යකඩ බඳින්න." },
+                { r: 'u', t: "Okay sir. Where is the drawing?", s: "හරි සර්. කෝ ප්ලෑන් එක?", hint: "Where is the drawing" },
+                { r: 'b', t: "Here it is. Check the main bars first.", s: "මෙන්න. මේන් බාර්ස් ටික බලන්න." },
+                { r: 'u', t: "It says four T16 bars.", s: "මේකේ තියෙන්නේ T16 කම්බි 4ක් කියලා.", hint: "Four T16 bars" },
+                { r: 'b', t: "Correct. And what about the links?", s: "හරි. එතකොට මුදු (ලින්ක්ස්)?" },
+                { r: 'u', t: "Links are T10 bars at 200 centers.", s: "මුදු T10 ඒවා, 200 පරතරය.", hint: "T10 bars at 200" },
+                { r: 'b', t: "Do you have your nips and tape measure?", s: "ඔයාගේ අඬුවයි ටේප් එකයි තියෙනවද?" },
+                { r: 'u', t: "Yes, I have my tools here.", s: "ඔව්, මගේ බඩු ටික මෙතන තියෙනවා.", hint: "Have my tools here" },
+                { r: 'b', t: "Do you need tying wire?", s: "බඳින කම්බි ඕනද?" },
+                { r: 'u', t: "Yes, I need a roll of wire.", s: "ඔව්, මට කම්බි රෝලක් ඕනා.", hint: "Need a roll of wire" },
+                { r: 'b', t: "Get it from the store. Also get spacers.", s: "ස්ටෝරුවෙන් ගන්න. ස්පේසර්ස් (කවර් බ්ලොක්) එක්කම ගන්න." },
+                { r: 'u', t: "What size cover blocks do we need?", s: "මොන සයිස් කවර් බ්ලොක්ද ඕනා?", hint: "What size cover blocks" },
+                { r: 'b', t: "Use the 40mm plastic spacers.", s: "40mm ප්ලාස්ටික් ඒවා ගන්න." },
+                { r: 'u', t: "Okay 40mm. I understand.", s: "හරි 40mm. මට තේරුනා.", hint: "Okay 40mm understand" },
+                { r: 'b', t: "Call me when you are ready for inspection.", s: "ඔයා චෙක් කරන්න ලෑස්ති වුනාම මට කියන්න." },
+                { r: 'u', t: "I will call you when done.", s: "ඉවර වුනාම මම කතා කරන්නම්.", hint: "Call you when done" }
             ]
         },
 
         // --- 4. WELDING TASK ---
         {
-            id: 4, title: "4. Welding Job", icon: "🔥", desc: "Technical instructions for welding.",
+            id: 4, title: "4. Welding Job", icon: "🔥", desc: "Setting up a weld.",
             dialogue: [
-                { role: 'bot', text: "Nuwan, bring your welding gear here.", si: "නුවන්, වෑල්ඩින් බඩු ටික මෙහෙට ගේන්න." },
-                { role: 'user', text: "I am ready sir. What is the job?", si: "මම ලෑස්තියි සර්. මොකක්ද වැඩේ?", hint: "What is the job?" },
-                { role: 'bot', text: "We need to weld this bracket to the beam.", si: "අපිට මේ බ්‍රැකට් එක බීම් එකට පාස්සන්න ඕනා." },
-                { role: 'user', text: "Okay. Do you want a Fillet or Butt weld?", si: "හරි. ෆිලට් වෙල්ඩ් එකක්ද බට් වෙල්ඩ් එකක්ද ඕනා?", hint: "Fillet or Butt weld?" },
-                { role: 'bot', text: "A heavy fillet weld all around.", si: "වටේටම හොඳ ඝනකම ෆිලට් වෙල්ඩ් එකක්." },
-                { role: 'user', text: "Understood. I will grind the surface first.", si: "තේරුනා. මම මතුපිට ග්‍රයින්ඩ් කරගන්නම් ඉස්සෙල්ලා.", hint: "Grind surface first." },
-                { role: 'bot', text: "Make sure to set up the safety screen.", si: "සේෆ්ටි ස්ක්‍රීන් එක (ආවරණය) දාගන්න බලාගන්න." },
-                { role: 'user', text: "Yes, I will protect others from the arc.", si: "ඔව්, මම අනිත් අයව ආක් එකෙන් පරිස්සම් කරන්නම්.", hint: "Protect others from arc." },
-                { role: 'bot', text: "How long will it take?", si: "කොච්චර වෙලා යයිද?" },
-                { role: 'user', text: "Maybe 20 minutes to finish.", si: "විනාඩි 20ක් විතර යයි ඉවර කරන්න.", hint: "20 minutes to finish." },
-                { role: 'bot', text: "Good. Let me know when done.", si: "හොඳයි. ඉවර වුනාම කියන්න." },
-                { role: 'user', text: "Will do sir.", si: "අනිවාර්යයෙන්ම සර්.", hint: "Will do sir." }
+                { r: 'b', t: "Bring your welding gear over here.", s: "වෑල්ඩින් බඩු ටික මෙහෙට ගේන්න." },
+                { r: 'u', t: "I am ready sir. What is the job?", s: "මම ලෑස්තියි සර්. මොකක්ද වැඩේ?", hint: "What is the job" },
+                { r: 'b', t: "We need to weld this bracket to the beam.", s: "අපිට මේ බ්‍රැකට් එක බීම් එකට පාස්සන්න ඕනා." },
+                { r: 'u', t: "Okay. Is it a Fillet weld or Butt weld?", s: "හරි. ෆිලට් වෙල්ඩ් එකක්ද බට් වෙල්ඩ් එකක්ද?", hint: "Fillet or Butt weld" },
+                { r: 'b', t: "A strong Fillet weld all around.", s: "වටේටම හයිය ෆිලට් වෙල්ඩ් එකක්." },
+                { r: 'u', t: "What size rod should I use?", s: "මම මොන සයිස් කූරද ගන්න ඕනා?", hint: "What size rod" },
+                { r: 'b', t: "Use a 3.2mm rod. Set the amps correctly.", s: "3.2mm කූරක් ගන්න. ඇම්පියර් ගාණ හරියට හදන්න." },
+                { r: 'u', t: "Understood. I will grind the surface first.", s: "තේරුනා. මම ඉස්සෙල්ලා මතුපිට ග්‍රයින්ඩ් කරන්නම්.", hint: "Grind surface first" },
+                { r: 'b', t: "Make sure to set up the safety screen.", s: "සේෆ්ටි ස්ක්‍රීන් (ආවරණය) දාගන්න." },
+                { r: 'u', t: "Yes, I will protect others from the arc.", s: "ඔව්, මම අනිත් අයව ආක් එකෙන් ආරක්ෂා කරන්නම්.", hint: "Protect others from arc" },
+                { r: 'b', t: "Is the welding machine working fine?", s: "වෑල්ඩින් මැෂිම හොඳට වැඩද?" },
+                { r: 'u', t: "Yes, the machine is good.", s: "ඔව්, මැෂිම හොඳයි.", hint: "Machine is good" },
+                { r: 'b', t: "How long will this take?", s: "මේකට කොච්චර වෙලා යයිද?" },
+                { r: 'u', t: "Maybe 20 minutes to finish.", s: "විනාඩි 20ක් විතර යයි.", hint: "Maybe 20 minutes" },
+                { r: 'b', t: "Good. Let me know when done.", s: "හොඳයි. ඉවර වුනාම කියන්න." },
+                { r: 'u', t: "Will do sir.", s: "අනිවාර්යයෙන්ම සර්.", hint: "Will do sir" }
             ]
         },
 
         // --- 5. CONCRETE POUR ---
         {
-            id: 5, title: "5. Concrete Pour", icon: "🚛", desc: "Pouring, vibrating and leveling.",
+            id: 5, title: "5. Concrete Pour", icon: "🚛", desc: "Managing a concrete delivery.",
             dialogue: [
-                { role: 'bot', text: "The concrete truck is arriving now.", si: "කොන්ක්‍රීට් ට්‍රක් එක දැන් එනවා." },
-                { role: 'user', text: "Okay, the shuttering is ready.", si: "හරි, ෂටරින් (ලෑලි ගැසීම) ලෑස්තියි.", hint: "Shuttering is ready." },
-                { role: 'bot', text: "Who is on the vibrator?", si: "කවුද වයිබ්‍රේටරේ අල්ලන්නේ?" },
-                { role: 'user', text: "I can do the vibrating sir.", si: "මට වයිබ්‍රේට් කරන්න පුළුවන් සර්.", hint: "I can do vibrating." },
-                { role: 'bot', text: "Make sure there are no air bubbles.", si: "හුළං බුබුළු නැති වෙන්න වග බලාගන්න." },
-                { role: 'user', text: "I will vibrate it well, don't worry.", si: "මම හොඳට වයිබ්‍රේට් කරන්නම්, බය වෙන්න එපා.", hint: "Vibrate well, don't worry." },
-                { role: 'bot', text: "We need to level it quickly.", si: "අපිට ඉක්මනට ලෙවල් කරන්න වෙනවා." },
-                { role: 'user', text: "Pass me the long straight edge.", si: "මට අර දිග ලෑල්ල දෙන්න.", hint: "Pass the straight edge." },
-                { role: 'bot', text: "Here. Keep it smooth.", si: "මෙන්න. සිනිඳුවට තියාගන්න." },
-                { role: 'user', text: "I will use the trowel for finishing.", si: "මම ෆිනිෂ් කරන්න මේලන් එක පාවිච්චි කරන්නම්.", hint: "Use trowel for finishing." },
-                { role: 'bot', text: "Good work. Clean the tools after.", si: "හොඳ වැඩක්. පස්සේ බඩු ටික හෝදන්න." },
-                { role: 'user', text: "Yes, I will wash everything.", si: "ඔව්, මම ඔක්කොම හෝදන්නම්.", hint: "I will wash everything." }
+                { r: 'b', t: "The concrete truck is arriving now.", s: "කොන්ක්‍රීට් ට්‍රක් එක දැන් එනවා." },
+                { r: 'u', t: "Okay, the shuttering is ready.", s: "හරි, ෂටරින් එක ලෑස්තියි.", hint: "Shuttering is ready" },
+                { r: 'b', t: "Who is going to use the vibrator?", s: "කවුද වයිබ්‍රේටරේ අල්ලන්නේ?" },
+                { r: 'u', t: "I can do the vibrating sir.", s: "මට වයිබ්‍රේට් කරන්න පුළුවන් සර්.", hint: "I can do vibrating" },
+                { r: 'b', t: "Make sure you remove the air bubbles.", s: "හුළං බුබුළු යවන්න වග බලාගන්න." },
+                { r: 'u', t: "I will vibrate it well, don't worry.", s: "මම හොඳට වයිබ්‍රේට් කරන්නම්, බය වෙන්න එපා.", hint: "Vibrate well don't worry" },
+                { r: 'b', t: "We need to level it quickly.", s: "අපිට ඉක්මනට ලෙවල් කරන්න වෙනවා." },
+                { r: 'u', t: "Pass me the long straight edge.", s: "මට අර දිග ලෑල්ල දෙන්න.", hint: "Pass me straight edge" },
+                { r: 'b', t: "Here. Keep the surface smooth.", s: "මෙන්න. මතුපිට සිනිඳුවට තියාගන්න." },
+                { r: 'u', t: "I will use the steel trowel for finishing.", s: "මම ෆිනිෂ් කරන්න ස්ටීල් මේලන් එක ගන්නම්.", hint: "Use steel trowel" },
+                { r: 'b', t: "Is it going to rain?", s: "වහින්න වගේද?" },
+                { r: 'u', t: "Yes, we need plastic sheets to cover.", s: "ඔව්, වහන්න පොලිතින් ඕනා.", hint: "Need plastic sheets" },
+                { r: 'b', t: "Okay, cover it when done.", s: "හරි, ඉවර වුනාම වහන්න." },
+                { r: 'u', t: "I will cover it. Then I will wash tools.", s: "මම වහන්නම්. ඊට පස්සේ බඩු හෝදනවා.", hint: "Cover then wash tools" }
             ]
         },
 
         // --- 6. FIXING A MISTAKE ---
         {
-            id: 6, title: "6. Making a Mistake", icon: "⚠️", desc: "Apologizing and correcting an error.",
+            id: 6, title: "6. Making a Mistake", icon: "⚠️", desc: "Correcting an error politely.",
             dialogue: [
-                { role: 'bot', text: "Nuwan, wait! This measurement is wrong.", si: "නුවන් ඉන්න! මේ මිනුම වැරදියි." },
-                { role: 'user', text: "Oh? Let me check my tape measure.", si: "ආ? මම මගේ ටේප් එක බලන්නම්.", hint: "Let me check tape." },
-                { role: 'bot', text: "It is 100mm too short.", si: "මේක මිලිමීටර් 100ක් කොටයි." },
-                { role: 'user', text: "Sorry sir. I made a mistake.", si: "සොරි සර්. මගේ අතින් වැරදීමක් වුනේ.", hint: "Sorry sir. My mistake." },
-                { role: 'bot', text: "We cannot use this piece now.", si: "අපිට දැන් මේ කෑල්ල පාවිච්චි කරන්න බෑ." },
-                { role: 'user', text: "I will cut a new piece immediately.", si: "මම ඉක්මනට අලුත් කෑල්ලක් කපන්නම්.", hint: "Cut new piece immediately." },
-                { role: 'bot', text: "Be careful next time. Steel is expensive.", si: "ඊළඟ පාර පරිස්සම් වෙන්න. යකඩ ගණන් වැඩියි." },
-                { role: 'user', text: "It won't happen again. I promise.", si: "ආයේ එහෙම වෙන්නේ නෑ. මම පොරොන්දු වෙනවා.", hint: "It won't happen again." },
-                { role: 'bot', text: "Okay, fix it quickly.", si: "හරි, ඉක්මනට හදන්න." },
-                { role: 'user', text: "Thank you for understanding.", si: "තේරුම් ගත්තාට ස්තූතියි.", hint: "Thank you for understanding." }
+                { r: 'b', t: "Nuwan, wait! Come here please.", s: "නුවන් ඉන්න! පොඩ්ඩක් එන්න." },
+                { r: 'u', t: "Yes sir. What is the problem?", s: "ඔව් සර්. මොකක්ද ප්‍රශ්නය?", hint: "What is the problem" },
+                { r: 'b', t: "Did you measure this steel bar?", s: "ඔයා මේ යකඩ කූර මැන්නද?" },
+                { r: 'u', t: "Yes, I measured it at 2 meters.", s: "ඔව්, මම මීටර් 2කට මැන්නා.", hint: "Measured at 2 meters" },
+                { r: 'b', t: "It looks too short. Check it again.", s: "ඒක කොට පාටයි. ආයේ බලන්න." },
+                { r: 'u', t: "Oh no. It is 100mm too short.", s: "අපොයි. මිලිමීටර් 100ක් කොටයි.", hint: "100mm too short" },
+                { r: 'b', t: "That is a big mistake Nuwan.", s: "ඒක ලොකු වැරැද්දක් නුවන්." },
+                { r: 'u', t: "I am very sorry sir. My mistake.", s: "ගොඩක් සමාවෙන්න සර්. මගේ වැරැද්ද.", hint: "Sorry sir my mistake" },
+                { r: 'b', t: "We cannot use this piece now.", s: "අපිට දැන් මේ කෑල්ල ගන්න බෑ." },
+                { r: 'u', t: "I will cut a new piece immediately.", s: "මම වහාම අලුත් කෑල්ලක් කපන්නම්.", hint: "Cut new piece immediately" },
+                { r: 'b', t: "Be careful next time. Steel is expensive.", s: "ඊළඟ පාර පරිස්සම් වෙන්න. යකඩ ගණන්." },
+                { r: 'u', t: "It won't happen again. I promise.", s: "ආයේ එහෙම වෙන්නේ නෑ. මම පොරොන්දු වෙනවා.", hint: "It won't happen again" },
+                { r: 'b', t: "Okay, fix it quickly.", s: "හරි, ඉක්මනට හදන්න." },
+                { r: 'u', t: "Thank you for understanding sir.", s: "තේරුම් ගත්තාට ස්තූතියි සර්.", hint: "Thank you for understanding" }
             ]
         },
 
-        // --- 7. MACHINE BREAKDOWN ---
+        // --- 7. TOOL BREAKDOWN ---
         {
-            id: 7, title: "7. Tool Breakdown", icon: "⚙️", desc: "Reporting a broken machine.",
+            id: 7, title: "7. Tool Breakdown", icon: "⚙️", desc: "Reporting broken equipment.",
             dialogue: [
-                { role: 'bot', text: "Why have you stopped working?", si: "ඇයි වැඩේ නැවැත්තුවේ?" },
-                { role: 'user', text: "Sir, the grinder is not working.", si: "සර්, ග්‍රයින්ඩරේ වැඩ කරන්නේ නෑ.", hint: "Sir, grinder not working." },
-                { role: 'bot', text: "Is it plugged in correctly?", si: "ප්ලග් එක හරියට ගහලද?" },
-                { role: 'user', text: "Yes, I checked the plug and fuse.", si: "ඔව්, මම ප්ලග් එකයි ෆියුස් එකයි බැලුවා.", hint: "Checked plug and fuse." },
-                { role: 'bot', text: "Maybe the cable is cut?", si: "සමහර විට වයර් එක කැපිලද?" },
-                { role: 'user', text: "No, the cable looks fine. It smells burnt.", si: "නෑ, වයර් එක හොඳයි. පිච්චුනු ගඳක් එනවා.", hint: "It smells burnt." },
-                { role: 'bot', text: "Okay, do not use it. It is dangerous.", si: "හරි, පාවිච්චි කරන්න එපා. ඒක අනතුරුදායකයි." },
-                { role: 'user', text: "I will tag it as 'Broken'.", si: "මම ඒකේ 'කැඩිලා' කියලා බෝඩ් එකක් ගහන්නම්.", hint: "Tag it as Broken." },
-                { role: 'bot', text: "Go get a spare one from the store.", si: "ස්ටෝරුවෙන් වෙන එකක් ගේන්න." },
-                { role: 'user', text: "Okay, I am going now.", si: "හරි, මම දැන් යනවා.", hint: "Going now." }
+                { r: 'b', t: "Why have you stopped working?", s: "ඇයි වැඩේ නැවැත්තුවේ?" },
+                { r: 'u', t: "Sir, the grinder is not working.", s: "සර්, ග්‍රයින්ඩරේ වැඩ කරන්නේ නෑ.", hint: "Grinder not working" },
+                { r: 'b', t: "Is it plugged in correctly?", s: "ප්ලග් එක හරියට ගහලද?" },
+                { r: 'u', t: "Yes, I checked the plug and fuse.", s: "ඔව්, මම ප්ලග් එකයි ෆියුස් එකයි බැලුවා.", hint: "Checked plug and fuse" },
+                { r: 'b', t: "Maybe the cable is cut?", s: "සමහර විට වයර් එක කැපිලද?" },
+                { r: 'u', t: "No, the cable is fine. It smells burnt.", s: "නෑ, වයර් එක හොඳයි. පිච්චුනු ගඳක් එනවා.", hint: "It smells burnt" },
+                { r: 'b', t: "Okay, do not use it. It is dangerous.", s: "හරි, පාවිච්චි කරන්න එපා. ඒක අනතුරුදායකයි." },
+                { r: 'u', t: "I will put a 'Do Not Use' tag on it.", s: "මම ඒකේ 'පාවිච්චි කරන්න එපා' කියලා ටැග් එකක් දාන්නම්.", hint: "Put a tag on it" },
+                { r: 'b', t: "Good idea. Go get a spare from the store.", s: "හොඳ අදහස. ගිහින් ස්ටෝරුවෙන් වෙන එකක් ගන්න." },
+                { r: 'u', t: "Okay, I will go get one now.", s: "හරි, මම දැන් ගිහින් එකක් ගන්නම්.", hint: "Go get one now" },
+                { r: 'b', t: "Hurry back, we need to finish.", s: "ඉක්මනට එන්න, අපිට ඉවර කරන්න ඕනා." },
+                { r: 'u', t: "I will be back in 5 minutes.", s: "විනාඩි 5කින් එන්නම්.", hint: "Back in 5 minutes" }
             ]
         },
 
         // --- 8. END OF DAY ---
         {
-            id: 8, title: "8. End of Shift", icon: "🌅", desc: "Cleaning up and timesheets.",
+            id: 8, title: "8. End of Shift", icon: "🌅", desc: "Clocking out routine.",
             dialogue: [
-                { role: 'bot', text: "Alright lads, pack up. Time to go.", si: "හරි කොල්ලනේ, බඩු අස්කරගන්න. යන්න වෙලාව හරි." },
-                { role: 'user', text: "Okay sir. I am cleaning my area.", si: "හරි සර්. මම මගේ ඒරියා එක සුද්ද කරනවා.", hint: "Cleaning my area." },
-                { role: 'bot', text: "Did you put the tools back?", si: "ටූල්ස් ටික ආයේ තිබ්බද?" },
-                { role: 'user', text: "Yes, everything is in the box.", si: "ඔව්, ඔක්කොම පෙට්ටිය ඇතුලේ.", hint: "Everything in the box." },
-                { role: 'bot', text: "Don't forget to sign the timesheet.", si: "ටයිම්-ෂීට් එක අත්සන් කරන්න අමතක කරන්න එපා." },
-                { role: 'user', text: "I signed it just now.", si: "මම දැන් අත්සන් කළා.", hint: "Signed it just now." },
-                { role: 'bot', text: "Good job today Nuwan.", si: "අද හොඳට වැඩ කළා නුවන්." },
-                { role: 'user', text: "Thanks sir. See you tomorrow.", si: "තැන්ක්ස් සර්. හෙට හම්බෙමු.", hint: "See you tomorrow." },
-                { role: 'bot', text: "Have a good evening.", si: "සුභ සැන්දෑවක්." },
-                { role: 'user', text: "You too. Bye.", si: "ඔබටත් එසේමයි. බායි.", hint: "You too. Bye." }
+                { r: 'b', t: "Alright lads, pack up. Time to go.", s: "හරි කොල්ලනේ, බඩු අස්කරගන්න. යන්න වෙලාව හරි." },
+                { r: 'u', t: "Okay sir. I am cleaning my area.", s: "හරි සර්. මම මගේ ඒරියා එක සුද්ද කරනවා.", hint: "Cleaning my area" },
+                { r: 'b', t: "Did you put the tools back?", s: "ටූල්ස් ටික ආයේ තිබ්බද?" },
+                { r: 'u', t: "Yes, all tools are in the box.", s: "ඔව්, ඔක්කොම පෙට්ටිය ඇතුලේ.", hint: "Tools in the box" },
+                { r: 'b', t: "Did you lock the tool box?", s: "පෙට්ටිය ලොක් කළාද?" },
+                { r: 'u', t: "Yes, here is the key.", s: "ඔව්, මෙන්න යතුර.", hint: "Here is the key" },
+                { r: 'b', t: "Did you sign the timesheet?", s: "ටයිම්-ෂීට් එක අත්සන් කළාද?" },
+                { r: 'u', t: "I am going to sign it now.", s: "මම දැන් අත්සන් කරන්න යන්නේ.", hint: "Sign it now" },
+                { r: 'b', t: "Did you work overtime today?", s: "අද වැඩිපුර වැඩ කළාද?" },
+                { r: 'u', t: "Yes, one hour extra.", s: "ඔව්, පැයක් වැඩිපුර.", hint: "Yes one hour extra" },
+                { r: 'b', t: "Okay, mark it on the sheet.", s: "හරි, කොළේ මාක් කරන්න." },
+                { r: 'u', t: "I marked it correctly.", s: "මම හරි විදිහට මාක් කළා.", hint: "Marked it correctly" },
+                { r: 'b', t: "Good work today Nuwan.", s: "අද වැඩේ හොඳයි නුවන්." },
+                { r: 'u', t: "Thank you sir. See you tomorrow.", s: "ස්තූතියි සර්. හෙට හම්බෙමු.", hint: "See you tomorrow" }
             ]
         },
 
-        // =================================================================
-        // SECTION 2: DAILY LIFE IN IRELAND (සාමාන්‍ය ජීවිතය)
-        // =================================================================
-
-        // --- 9. AT THE SUPERMARKET ---
+        // --- 9. SUPERMARKET SHOPPING ---
         {
             id: 9, title: "9. Supermarket", icon: "🛒", desc: "Buying food and paying.",
             dialogue: [
-                { role: 'bot', text: "Hello there. Do you need a bag?", si: "හෙලෝ. ඔයාට බෑග් එකක් ඕනද?" },
-                { role: 'user', text: "No thanks. I have my own bag.", si: "එපා ස්තූතියි. මං ළඟ බෑග් එකක් තියෙනවා.", hint: "Have my own bag." },
-                { role: 'bot', text: "Okay. Do you have a loyalty card?", si: "හරි. ඔයා ළඟ ලෝයල්ටි කාඩ් (වට්ටම් කාඩ්) එකක් තියෙනවද?" },
-                { role: 'user', text: "No, I don't have one.", si: "නෑ, මං ළඟ නෑ.", hint: "I don't have one." },
-                { role: 'bot', text: "That will be 15 Euros and 50 cents.", si: "ඔක්කොම 15.50 යි." },
-                { role: 'user', text: "Can I pay by card?", si: "කාඩ් එකෙන් ගෙවන්න පුළුවන්ද?", hint: "Pay by card?" },
-                { role: 'bot', text: "Yes, tap your card here please.", si: "ඔව්, මෙතනින් කාඩ් එක ටැප් කරන්න." },
-                { role: 'user', text: "Okay... is it done?", si: "හරි... හරි ගියාද?", hint: "Is it done?" },
-                { role: 'bot', text: "Yes, approved. Would you like a receipt?", si: "ඔව්, හරි ගියා. බිල් එක ඕනද?" },
-                { role: 'user', text: "No thanks. Have a nice day.", si: "එපා ස්තූතියි. සුභ දවසක්.", hint: "Have a nice day." }
+                { r: 'b', t: "Hello there. Do you need a bag?", s: "හෙලෝ. ඔයාට බෑග් එකක් ඕනද?" },
+                { r: 'u', t: "No thanks. I have my own bag.", s: "එපා ස්තූතියි. මං ළඟ බෑග් එකක් තියෙනවා.", hint: "Have my own bag" },
+                { r: 'b', t: "Did you find everything okay?", s: "ඔක්කොම හම්බුනාද?" },
+                { r: 'u', t: "Yes, I got everything I need.", s: "ඔව්, මට ඕන ඔක්කොම ගත්තා.", hint: "Got everything I need" },
+                { r: 'b', t: "Do you have a Club Card?", s: "ක්ලබ් කාඩ් (වට්ටම් කාඩ්) එකක් තියෙනවද?" },
+                { r: 'u', t: "No, I do not have one yet.", s: "නෑ, මං ළඟ තාම නෑ.", hint: "Do not have one" },
+                { r: 'b', t: "That will be 20 Euros please.", s: "යුරෝ 20ක් වෙනවා." },
+                { r: 'u', t: "Can I pay by card?", s: "කාඩ් එකෙන් ගෙවන්නද?", hint: "Pay by card" },
+                { r: 'b', t: "Yes. Tap on the machine.", s: "ඔව්. මැෂිම උඩින් අල්ලන්න." },
+                { r: 'u', t: "Okay... did it work?", s: "හරි... හරි ගියාද?", hint: "Did it work" },
+                { r: 'b', t: "Yes approved. Do you want a receipt?", s: "ඔව් හරි. බිල් එක ඕනද?" },
+                { r: 'u', t: "No thanks. Have a nice day.", s: "එපා ස්තූතියි. සුභ දවසක්.", hint: "Have a nice day" },
+                { r: 'b', t: "Wait! You forgot your milk.", s: "පොඩ්ඩක් ඉන්න! කිරි එක අමතක වුනා." },
+                { r: 'u', t: "Oh! Thank you very much.", s: "ආ! බොහොම ස්තූතියි.", hint: "Thank you very much" },
+                { r: 'b', t: "No problem. Bye.", s: "කමක් නෑ. බායි." },
+                { r: 'u', t: "Bye bye.", s: "බායි." }
             ]
         },
 
-        // --- 10. PUBLIC TRANSPORT (BUS) ---
+        // --- 10. PUBLIC TRANSPORT ---
         {
-            id: 10, title: "10. Taking the Bus", icon: "🚌", desc: "Asking the driver & paying.",
+            id: 10, title: "10. Taking the Bus", icon: "🚌", desc: "Paying the driver.",
             dialogue: [
-                { role: 'bot', text: "(Bus stops) Hello.", si: "(බස් එක නවතී) හෙලෝ." },
-                { role: 'user', text: "Hello. Does this bus go to City Center?", si: "හෙලෝ. මේ බස් එක සිටි සෙන්ටර් යනවද?", hint: "Go to City Center?" },
-                { role: 'bot', text: "Yes it does. Hop on.", si: "ඔව් යනවා. නගින්න." },
-                { role: 'user', text: "How much is the fare?", si: "ගාණ කීයද?", hint: "How much is the fare?" },
-                { role: 'bot', text: "It is 2 Euros 60 cents.", si: "යුරෝ 2.60 යි." },
-                { role: 'user', text: "Do you take cash?", si: "අතේ සල්ලි ගන්නවද?", hint: "Do you take cash?" },
-                { role: 'bot', text: "Coins only, no notes.", si: "කාසි විතරයි, නෝට්ටු බෑ." },
-                { role: 'user', text: "Okay, here is 3 Euros in coins.", si: "හරි, මෙන්න යුරෝ 3ක කාසි.", hint: "Here is 3 Euros." },
-                { role: 'bot', text: "Here is your ticket and change.", si: "මෙන්න ටිකට් එකයි ඉතුරු සල්ලියි." },
-                { role: 'user', text: "Thank you driver.", si: "ස්තූතියි ඩ්‍රයිවර්.", hint: "Thank you driver." }
+                { r: 'b', t: "(Bus stops) Hello.", s: "(බස් එක නවතී) හෙලෝ." },
+                { r: 'u', t: "Hello driver. Good morning.", s: "හෙලෝ ඩ්‍රයිවර්. ගුඩ් මෝනින්.", hint: "Hello driver" },
+                { r: 'b', t: "Where are you going?", s: "කොහෙටද යන්නේ?" },
+                { r: 'u', t: "I am going to City Center.", s: "මම සිටි සෙන්ටර් යනවා.", hint: "Going to City Center" },
+                { r: 'b', t: "Do you have a Leap Card?", s: "ඔයා ළඟ ලීප් කාඩ් (බස් කාඩ්) එකක් තියෙනවද?" },
+                { r: 'u', t: "No, I will pay cash.", s: "නෑ, මම අතේ සල්ලි දෙන්නම්.", hint: "Pay cash" },
+                { r: 'b', t: "That will be 3 Euros.", s: "යුරෝ 3යි." },
+                { r: 'u', t: "Do you have change for 5 Euros?", s: "යුරෝ 5ට මාරු සල්ලි තියෙනවද?", hint: "Change for 5 Euros" },
+                { r: 'b', t: "No change given. Exact fare only.", s: "මාරු සල්ලි දෙන්නේ නෑ. ගානටම ඕනා." },
+                { r: 'u', t: "Oh, wait. I have coins here.", s: "ආ, ඉන්න. මං ළඟ කාසි තියෙනවා.", hint: "I have coins" },
+                { r: 'b', t: "Put them in the slot.", s: "ඒවා හිලට දාන්න." },
+                { r: 'u', t: "Okay, here is 3 Euros.", s: "හරි, මෙන්න යුරෝ 3.", hint: "Here is 3 Euros" },
+                { r: 'b', t: "Take your ticket.", s: "ටිකට් එක ගන්න." },
+                { r: 'u', t: "Thank you driver.", s: "ස්තූතියි ඩ්‍රයිවර්.", hint: "Thank you driver" },
+                { r: 'b', t: "Move down the bus please.", s: "පස්සට යන්න කරුණාකරලා." },
+                { r: 'u', t: "Okay, I am moving back.", s: "හරි මම පස්සට යනවා.", hint: "Moving back" }
             ]
         },
 
-        // --- 11. OPENING BANK ACCOUNT ---
+        // --- 11. BANK ACCOUNT ---
         {
-            id: 11, title: "11. At the Bank", icon: "🏦", desc: "Opening an account.",
+            id: 11, title: "11. At the Bank", icon: "🏦", desc: "Opening a bank account.",
             dialogue: [
-                { role: 'bot', text: "Good morning. How can I help?", si: "සුභ උදෑසනක්. මම කොහොමද උදව් කරන්නේ?" },
-                { role: 'user', text: "I want to open a current account.", si: "මට ජංගම ගිණුමක් අරින්න ඕනා.", hint: "Open current account." },
-                { role: 'bot', text: "Do you have your passport and PPS number?", si: "ඔයාගේ පාස්පෝට් එකයි PPS නම්බර් එකයි තියෙනවද?" },
-                { role: 'user', text: "Yes, I have both documents.", si: "ඔව්, මං ළඟ දෙකම තියෙනවා.", hint: "I have both documents." },
-                { role: 'bot', text: "Do you have proof of address?", si: "ලිපිනය තහවුරු කරන්න දෙයක් තියෙනවද?" },
-                { role: 'user', text: "I have a letter from my employer.", si: "මගේ බොස්ගෙන් ලියුමක් තියෙනවා.", hint: "Letter from employer." },
-                { role: 'bot', text: "Perfect. Please fill out this form.", si: "නියමයි. මේ ෆෝම් එක පුරවන්න." },
-                { role: 'user', text: "Can you help me with this question?", si: "මට මේ ප්‍රශ්නෙට උදව් කරනවද?", hint: "Help me with this?" },
-                { role: 'bot', text: "Sure. Just sign your name there.", si: "ඔතන නම අත්සන් කරන්න." },
-                { role: 'user', text: "Okay, thank you very much.", si: "හරි, බොහොම ස්තූතියි.", hint: "Thank you very much." }
+                { r: 'b', t: "Good morning. How can I help?", s: "සුභ උදෑසනක්. මම කොහොමද උදව් කරන්නේ?" },
+                { r: 'u', t: "I want to open a current account.", s: "මට ජංගම ගිණුමක් අරින්න ඕනා.", hint: "Open current account" },
+                { r: 'b', t: "Do you have your passport?", s: "ඔයාගේ පාස්පෝට් එක තියෙනවද?" },
+                { r: 'u', t: "Yes, here is my passport.", s: "ඔව්, මෙන්න මගේ පාස්පෝට් එක.", hint: "Here is my passport" },
+                { r: 'b', t: "Do you have your PPS number?", s: "ඔයාගේ PPS නම්බර් එක තියෙනවද?" },
+                { r: 'u', t: "Yes, I have the letter here.", s: "ඔව්, මං ළඟ ලියුම තියෙනවා.", hint: "Have the letter here" },
+                { r: 'b', t: "Do you have proof of address?", s: "ලිපිනය තහවුරු කරන්න දෙයක් තියෙනවද?" },
+                { r: 'u', t: "I have a letter from my employer.", s: "මගේ බොස්ගෙන් ලියුමක් තියෙනවා.", hint: "Letter from employer" },
+                { r: 'b', t: "Perfect. Please fill out this form.", s: "නියමයි. මේ ෆෝම් එක පුරවන්න." },
+                { r: 'u', t: "Can you help me with this section?", s: "මට මේ කොටසට උදව් කරනවද?", hint: "Help me with this" },
+                { r: 'b', t: "Sure. Just sign your name there.", s: "ඔතන නම අත්සන් කරන්න." },
+                { r: 'u', t: "Okay, signed. Is that all?", s: "හරි, අත්සන් කළා. එච්චරද?", hint: "Signed. Is that all" },
+                { r: 'b', t: "Yes. Your card will come by post.", s: "ඔව්. කාඩ් එක තැපෑලෙන් එයි." },
+                { r: 'u', t: "Thank you very much.", s: "බොහොම ස්තූතියි.", hint: "Thank you very much" }
             ]
         },
 
-        // --- 12. DOCTOR VISIT (BACK PAIN) ---
+        // --- 12. DOCTOR VISIT ---
         {
-            id: 12, title: "12. The Doctor", icon: "👨‍⚕️", desc: "Explaining sickness.",
+            id: 12, title: "12. The Doctor", icon: "👨‍⚕️", desc: "Back pain complaint.",
             dialogue: [
-                { role: 'bot', text: "Come in. What seems to be the problem?", si: "ඇතුලට එන්න. මොකක්ද ප්‍රශ්නය?" },
-                { role: 'user', text: "Doctor, I have a bad back pain.", si: "දොස්තර, මගේ කොන්දේ තද වේදනාවක් තියෙනවා.", hint: "Bad back pain." },
-                { role: 'bot', text: "Where exactly does it hurt?", si: "හරියටම කොතනද රිදෙන්නේ?" },
-                { role: 'user', text: "Right here, in the lower back.", si: "මෙන්න මෙතන, කොන්දේ පහළ.", hint: "In the lower back." },
-                { role: 'bot', text: "Did you lift something heavy at work?", si: "වැඩබිමේදී බරක් ඉස්සුවද?" },
-                { role: 'user', text: "Yes, a bag of cement yesterday.", si: "ඔව්, ඊයේ සිමෙන්ති කොට්ටයක්.", hint: "Bag of cement yesterday." },
-                { role: 'bot', text: "Take these tablets and rest for 2 days.", si: "මේ පෙති බීලා දවස් 2ක් විවේක ගන්න." },
-                { role: 'user', text: "Can I get a medical certificate for work?", si: "මට වැඩට පෙන්නන්න මෙඩිකල් සහතිකයක් දෙනවද?", hint: "Medical certificate?" },
-                { role: 'bot', text: "Yes, I will write one for you.", si: "ඔව්, මම ලියලා දෙන්නම්." },
-                { role: 'user', text: "Thank you doctor.", si: "ස්තූතියි දොස්තර.", hint: "Thank you doctor." }
+                { r: 'b', t: "Come in. What seems to be the problem?", s: "ඇතුලට එන්න. මොකක්ද ප්‍රශ්නය?" },
+                { r: 'u', t: "Doctor, I have a bad back pain.", s: "දොස්තර, මගේ කොන්දේ තද වේදනාවක් තියෙනවා.", hint: "Bad back pain" },
+                { r: 'b', t: "Where exactly does it hurt?", s: "හරියටම කොතනද රිදෙන්නේ?" },
+                { r: 'u', t: "Right here, in the lower back.", s: "මෙන්න මෙතන, කොන්දේ පහළ.", hint: "In the lower back" },
+                { r: 'b', t: "When did it start?", s: "කවදද පටන් ගත්තේ?" },
+                { r: 'u', t: "It started yesterday at work.", s: "ඊයේ වැඩපොළේදී පටන් ගත්තේ.", hint: "Yesterday at work" },
+                { r: 'b', t: "Did you lift something heavy?", s: "බර දෙයක් ඉස්සුවද?" },
+                { r: 'u', t: "Yes, a bag of cement.", s: "ඔව්, සිමෙන්ති කොට්ටයක්.", hint: "Bag of cement" },
+                { r: 'b', t: "Take these tablets and rest for 2 days.", s: "මේ පෙති බීලා දවස් 2ක් විවේක ගන්න." },
+                { r: 'u', t: "Can I get a medical certificate?", s: "මට මෙඩිකල් සහතිකයක් දෙනවද?", hint: "Medical certificate" },
+                { r: 'b', t: "Yes, I will write one for work.", s: "ඔව්, මම වැඩට පෙන්නන්න ලියලා දෙන්නම්." },
+                { r: 'u', t: "Thank you doctor.", s: "ස්තූතියි දොස්තර.", hint: "Thank you doctor" }
             ]
         },
 
         // --- 13. CALLING IN SICK ---
         {
-            id: 13, title: "13. Calling Boss (Sick)", icon: "🤒", desc: "Taking a sick day.",
+            id: 13, title: "13. Calling Sick", icon: "🤒", desc: "Phone call to boss.",
             dialogue: [
-                { role: 'bot', text: "(Phone rings) Liam speaking.", si: "(ෆෝන් එක වදී) ලියම් කතා කරනවා." },
-                { role: 'user', text: "Hello sir. This is Nuwan.", si: "හෙලෝ සර්. මේ නුවන්.", hint: "Hello sir. This is Nuwan." },
-                { role: 'bot', text: "Oh hi Nuwan. Everything okay?", si: "ආ නුවන්. හැමදේම හොඳින්ද?" },
-                { role: 'user', text: "Sorry sir, I cannot come to work today.", si: "සොරි සර්, මට අද වැඩට එන්න බෑ.", hint: "Cannot come to work." },
-                { role: 'bot', text: "Why? Are you sick?", si: "ඇයි? අසනීපද?" },
-                { role: 'user', text: "Yes, I have a fever and headache.", si: "ඔව්, මට උණ සහ ඔළුව කැක්කුම.", hint: "Fever and headache." },
-                { role: 'bot', text: "Okay. Do you need a doctor?", si: "හරි. දොස්තර කෙනෙක් ඕනද?" },
-                { role: 'user', text: "I will rest today. I hope to come tomorrow.", si: "මම අද රෙස්ට් කරනවා. හෙට එන්න බලාපොරොත්තු වෙනවා.", hint: "Hope to come tomorrow." },
-                { role: 'bot', text: "No problem. Feel better soon.", si: "ප්‍රශ්නයක් නෑ. ඉක්මනට සනීප කරගන්න." },
-                { role: 'user', text: "Thanks sir. Bye.", si: "තැන්ක්ස් සර්. බායි.", hint: "Thanks sir." }
+                { r: 'b', t: "(Phone rings) Liam speaking.", s: "(ෆෝන් එක වදී) ලියම් කතා කරනවා." },
+                { r: 'u', t: "Hello sir. This is Nuwan.", s: "හෙලෝ සර්. මේ නුවන්.", hint: "This is Nuwan" },
+                { r: 'b', t: "Oh hi Nuwan. Everything okay?", s: "ආ නුවන්. හැමදේම හොඳින්ද?" },
+                { r: 'u', t: "Sorry sir, I cannot come to work today.", s: "සොරි සර්, මට අද වැඩට එන්න බෑ.", hint: "Cannot come today" },
+                { r: 'b', t: "Why? Are you sick?", s: "ඇයි? අසනීපද?" },
+                { r: 'u', t: "Yes, I have a fever and headache.", s: "ඔව්, මට උණ සහ ඔළුව කැක්කුම.", hint: "Fever and headache" },
+                { r: 'b', t: "Okay. Do you need a doctor?", s: "හරි. දොස්තර කෙනෙක් ඕනද?" },
+                { r: 'u', t: "I will rest today. I hope to come tomorrow.", s: "මම අද රෙස්ට් කරනවා. හෙට එන්න හිතන් ඉන්නවා.", hint: "Hope to come tomorrow" },
+                { r: 'b', t: "No problem. Feel better soon.", s: "ප්‍රශ්නයක් නෑ. ඉක්මනට සනීප කරගන්න." },
+                { r: 'u', t: "Thanks sir. Bye.", s: "තැන්ක්ස් සර්. බායි.", hint: "Thanks sir" }
             ]
         },
 
@@ -640,110 +637,125 @@
         {
             id: 14, title: "14. Pharmacy", icon: "💊", desc: "Buying medicine.",
             dialogue: [
-                { role: 'bot', text: "Hello, can I help you?", si: "හෙලෝ, උදව් කරන්නද?" },
-                { role: 'user', text: "I need something for a headache.", si: "මට ඔළුව කැක්කුමට බෙහෙතක් ඕනා.", hint: "Something for headache." },
-                { role: 'bot', text: "Have you taken anything yet?", si: "ඔයා දැනට මොනවා හරි බිව්වද?" },
-                { role: 'user', text: "No, nothing yet.", si: "නෑ, තාම මොකුත් නෑ.", hint: "No, nothing yet." },
-                { role: 'bot', text: "Paracetamol is best. Take two now.", si: "පැරසිටමෝල් හොඳයි. දැන් දෙකක් බොන්න." },
-                { role: 'user', text: "Do I need water?", si: "වතුර එක්කද බොන්න ඕනා?", hint: "Do I need water?" },
-                { role: 'bot', text: "Yes. That is 4 Euros.", si: "ඔව්. යුරෝ 4යි." },
-                { role: 'user', text: "Here is the money.", si: "මෙන්න සල්ලි.", hint: "Here is the money." }
+                { r: 'b', t: "Hello, can I help you?", s: "හෙලෝ, උදව් කරන්නද?" },
+                { r: 'u', t: "I need something for a headache.", s: "මට ඔළුව කැක්කුමට බෙහෙතක් ඕනා.", hint: "Something for headache" },
+                { r: 'b', t: "Have you taken anything yet?", s: "ඔයා දැනට මොනවා හරි බිව්වද?" },
+                { r: 'u', t: "No, nothing yet.", s: "නෑ, තාම මොකුත් නෑ.", hint: "No nothing yet" },
+                { r: 'b', t: "Paracetamol is best. Take two now.", s: "පැරසිටමෝල් හොඳයි. දැන් දෙකක් බොන්න." },
+                { r: 'u', t: "Do I need water?", s: "වතුර එක්කද බොන්න ඕනා?", hint: "Do I need water" },
+                { r: 'b', t: "Yes. That is 4 Euros.", s: "ඔව්. යුරෝ 4යි." },
+                { r: 'u', t: "Here is the money.", s: "මෙන්න සල්ලි.", hint: "Here is the money" },
+                { r: 'b', t: "Do you need a receipt?", s: "බිල් එක ඕනද?" },
+                { r: 'u', t: "No thanks.", s: "එපා ස්තූතියි.", hint: "No thanks" }
             ]
         },
 
-        // --- 15. ASKING DIRECTIONS ---
+        // --- 15. GETTING LOST ---
         {
-            id: 15, title: "15. Getting Lost", icon: "🗺️", desc: "Finding your way.",
+            id: 15, title: "15. Asking Directions", icon: "🗺️", desc: "Finding your way.",
             dialogue: [
-                { role: 'bot', text: "Hello.", si: "හෙලෝ." },
-                { role: 'user', text: "Excuse me. I am lost.", si: "සමාවෙන්න. මං අතරමං වෙලා.", hint: "Excuse me. I am lost." },
-                { role: 'bot', text: "Where are you trying to go?", si: "කොහෙටද යන්න හදන්නේ?" },
-                { role: 'user', text: "I am looking for the Train Station.", si: "මම කෝච්චි ස්ටේෂන් එක හොයනවා.", hint: "Looking for Train Station." },
-                { role: 'bot', text: "Go straight and turn left at the lights.", si: "කෙලින් ගිහින් ලයිට් කණු ළඟින් වමට හැරෙන්න." },
-                { role: 'user', text: "Is it far from here?", si: "මෙතන ඉඳන් දුරද?", hint: "Is it far?" },
-                { role: 'bot', text: "No, only 5 minutes walk.", si: "නෑ, විනාඩි 5ක පයින් යන දුර." },
-                { role: 'user', text: "Thank you very much.", si: "බොහොම ස්තූතියි.", hint: "Thank you very much." }
+                { r: 'b', t: "Hello.", s: "හෙලෝ." },
+                { r: 'u', t: "Excuse me. I am lost.", s: "සමාවෙන්න. මං අතරමං වෙලා.", hint: "Excuse me I am lost" },
+                { r: 'b', t: "Where are you trying to go?", s: "කොහෙටද යන්න හදන්නේ?" },
+                { r: 'u', t: "I am looking for the Train Station.", s: "මම කෝච්චි ස්ටේෂන් එක හොයනවා.", hint: "Looking for Train Station" },
+                { r: 'b', t: "Go straight and turn left at the lights.", s: "කෙලින් ගිහින් ලයිට් කණු ළඟින් වමට හැරෙන්න." },
+                { r: 'u', t: "Is it far from here?", s: "මෙතන ඉඳන් දුරද?", hint: "Is it far" },
+                { r: 'b', t: "No, only 5 minutes walk.", s: "නෑ, විනාඩි 5ක පයින් යන දුර." },
+                { r: 'u', t: "Thank you very much.", s: "බොහොම ස්තූතියි.", hint: "Thank you very much" },
+                { r: 'b', t: "You are welcome.", s: "සුළු දෙයක්." },
+                { r: 'u', t: "Have a nice day.", s: "සුභ දවසක්.", hint: "Have a nice day" }
             ]
         },
 
-        // --- 16. EMERGENCY DRILL ---
+        // --- 16. FIRE ALARM ---
         {
-            id: 16, title: "16. Fire Alarm", icon: "🚨", desc: "Reacting to an emergency.",
+            id: 16, title: "16. Fire Emergency", icon: "🚨", desc: "Evacuation drill.",
             dialogue: [
-                { role: 'bot', text: "(LOUD SIREN) Fire Alarm! Evacuate!", si: "(සයිරන් එක වදී) ගිනි අනතුරු ඇඟවීමක්! එළියට යන්න!" },
-                { role: 'user', text: "Is this a drill or real?", si: "මේක පුහුණුවක්ද ඇත්ත එකක්ද?", hint: "Drill or real?" },
-                { role: 'bot', text: "It is real! Drop your tools and go!", si: "ඇත්ත එකක්! බඩු දාලා යන්න!" },
-                { role: 'user', text: "Where is the emergency exit?", si: "හදිසි පිටවීම (Exit) කොහෙද?", hint: "Where is emergency exit?" },
-                { role: 'bot', text: "Follow the green signs to the gate.", si: "ගේට්ටුව පැත්තට තියෙන කොළ පාට සලකුණු දිගේ යන්න." },
-                { role: 'user', text: "I am going now.", si: "මම දැන් යනවා.", hint: "I am going now." },
-                { role: 'bot', text: "Do not run, just walk fast.", si: "දුවන්න එපා, වේගෙන් ඇවිදින්න." },
-                { role: 'user', text: "Understood. Everyone is out.", si: "තේරුනා. හැමෝම එළියේ.", hint: "Everyone is out." }
+                { r: 'b', t: "(LOUD SIREN) Fire Alarm! Evacuate!", s: "(සයිරන් එක වදී) ගිනි අනතුරු ඇඟවීමක්! එළියට යන්න!" },
+                { r: 'u', t: "Is this a drill or real?", s: "මේක පුහුණුවක්ද ඇත්ත එකක්ද?", hint: "Drill or real" },
+                { r: 'b', t: "It is real! Drop your tools and go!", s: "ඇත්ත එකක්! බඩු දාලා යන්න!" },
+                { r: 'u', t: "Where is the emergency exit?", s: "හදිසි පිටවීම (Exit) කොහෙද?", hint: "Where is emergency exit" },
+                { r: 'b', t: "Follow the green signs to the gate.", s: "ගේට්ටුව පැත්තට තියෙන කොළ පාට සලකුණු දිගේ යන්න." },
+                { r: 'u', t: "I am going now.", s: "මම දැන් යනවා.", hint: "I am going now" },
+                { r: 'b', t: "Do not run, just walk fast.", s: "දුවන්න එපා, වේගෙන් ඇවිදින්න." },
+                { r: 'u', t: "Understood. Everyone is out.", s: "තේරුනා. හැමෝම එළියේ.", hint: "Everyone is out" },
+                { r: 'b', t: "Go to the assembly point.", s: "එකතු වෙන තැනට යන්න." },
+                { r: 'u', t: "I am there now.", s: "මම දැන් එතන ඉන්නේ.", hint: "I am there now" }
             ]
         },
 
         // --- 17. ASKING FOR LEAVE ---
         {
-            id: 17, title: "17. Requesting Holiday", icon: "✈️", desc: "Asking boss for days off.",
+            id: 17, title: "17. Requesting Holiday", icon: "✈️", desc: "Asking for time off.",
             dialogue: [
-                { role: 'bot', text: "Yes Nuwan, what do you need?", si: "ඔව් නුවන්, මොකක්ද ඕනා?" },
-                { role: 'user', text: "Sir, I need to ask for a holiday.", si: "සර්, මට නිවාඩුවක් ඉල්ලන්න ඕනා.", hint: "Sir, need a holiday." },
-                { role: 'bot', text: "When do you want to go?", si: "කවදද යන්න ඕනා?" },
-                { role: 'user', text: "Next month, for one week.", si: "ලබන මාසේ, සතියකට.", hint: "Next month, one week." },
-                { role: 'bot', text: "Is it urgent?", si: "ඒක හදිසිද?" },
-                { role: 'user', text: "Yes, a family matter.", si: "ඔව්, පවුලේ වැඩක්.", hint: "Yes, family matter." },
-                { role: 'bot', text: "Okay, fill out the leave form.", si: "හරි, නිවාඩු ෆෝම් එක පුරවන්න." },
-                { role: 'user', text: "Thank you sir.", si: "ස්තූතියි සර්.", hint: "Thank you sir." }
+                { r: 'b', t: "Yes Nuwan, what do you need?", s: "ඔව් නුවන්, මොකක්ද ඕනා?" },
+                { r: 'u', t: "Sir, I need to ask for a holiday.", s: "සර්, මට නිවාඩුවක් ඉල්ලන්න ඕනා.", hint: "Ask for a holiday" },
+                { r: 'b', t: "When do you want to go?", s: "කවදද යන්න ඕනා?" },
+                { r: 'u', t: "Next month, for one week.", s: "ලබන මාසේ, සතියකට.", hint: "Next month one week" },
+                { r: 'b', t: "Is it urgent?", s: "ඒක හදිසිද?" },
+                { r: 'u', t: "Yes, a family matter.", s: "ඔව්, පවුලේ වැඩක්.", hint: "Yes family matter" },
+                { r: 'b', t: "Okay, fill out the leave form.", s: "හරි, නිවාඩු ෆෝම් එක පුරවන්න." },
+                { r: 'u', t: "I will fill it today.", s: "මම අද ඒක පුරවන්නම්.", hint: "Fill it today" },
+                { r: 'b', t: "Give it to me tomorrow.", s: "හෙට මට දෙන්න." },
+                { r: 'u', t: "Thank you sir.", s: "ස්තූතියි සර්.", hint: "Thank you sir" }
             ]
         },
 
         // --- 18. RENTING A ROOM ---
         {
-            id: 18, title: "18. Renting Room", icon: "🏠", desc: "Talking to landlord.",
+            id: 18, title: "18. Renting Room", icon: "🏠", desc: "Talking to Landlord.",
             dialogue: [
-                { role: 'bot', text: "Hello, are you here to see the room?", si: "හෙලෝ, කාමරේ බලන්නද ආවේ?" },
-                { role: 'user', text: "Yes. How much is the rent?", si: "ඔව්. කුලිය කීයද?", hint: "How much is rent?" },
-                { role: 'bot', text: "It is 500 Euros per month.", si: "මාසෙට යුරෝ 500යි." },
-                { role: 'user', text: "Are bills included?", si: "බිල්පත් මේකට ඇතුලත්ද?", hint: "Are bills included?" },
-                { role: 'bot', text: "Electricity is extra. Internet is free.", si: "කරන්ට් බිල වෙනම. ඉන්ටර්නෙට් නොමිලේ." },
-                { role: 'user', text: "Is there a kitchen?", si: "කුස්සියක් තියෙනවද?", hint: "Is there a kitchen?" },
-                { role: 'bot', text: "Yes, a shared kitchen.", si: "ඔව්, පොදු කුස්සියක්." },
-                { role: 'user', text: "Okay, I will take it.", si: "හරි, මම මේක ගන්නවා.", hint: "I will take it." }
+                { r: 'b', t: "Hello, are you here to see the room?", s: "හෙලෝ, කාමරේ බලන්නද ආවේ?" },
+                { r: 'u', t: "Yes. How much is the rent?", s: "ඔව්. කුලිය කීයද?", hint: "How much is rent" },
+                { r: 'b', t: "It is 500 Euros per month.", s: "මාසෙට යුරෝ 500යි." },
+                { r: 'u', t: "Are bills included?", s: "බිල්පත් මේකට ඇතුලත්ද?", hint: "Are bills included" },
+                { r: 'b', t: "Electricity is extra. Internet is free.", s: "කරන්ට් බිල වෙනම. ඉන්ටර්නෙට් නොමිලේ." },
+                { r: 'u', t: "Is there a kitchen?", s: "කුස්සියක් තියෙනවද?", hint: "Is there a kitchen" },
+                { r: 'b', t: "Yes, a shared kitchen.", s: "ඔව්, පොදු කුස්සියක්." },
+                { r: 'u', t: "Is it near the bus stop?", s: "මේක බස් හෝල්ට් එක ළඟද?", hint: "Near bus stop" },
+                { r: 'b', t: "Yes, 5 minutes walk.", s: "ඔව්, විනාඩි 5යි." },
+                { r: 'u', t: "Okay, I will take it.", s: "හරි, මම මේක ගන්නවා.", hint: "I will take it" }
             ]
         },
 
-        // --- 19. SOCIAL CHAT ---
+        // --- 19. WEEKEND CHAT ---
         {
-            id: 19, title: "19. Weekend Chat", icon: "🍻", desc: "Friendly talk with coworkers.",
+            id: 19, title: "19. Weekend Chat", icon: "🍻", desc: "Social talk.",
             dialogue: [
-                { role: 'bot', text: "That was a hard week.", si: "මාර අමාරු සතියක්." },
-                { role: 'user', text: "Yes, very busy. But job is done.", si: "ඔව්, හරි බිසී. ඒත් වැඩේ ඉවරයි.", hint: "Yes, very busy." },
-                { role: 'bot', text: "Do you have plans for the weekend?", si: "සති අන්තයේ මොනවද ප්ලෑන්?" },
-                { role: 'user', text: "I will sleep and call my family.", si: "මම නිදාගෙන පවුලේ අයට කතා කරනවා.", hint: "Sleep and call family." },
-                { role: 'bot', text: "Sounds relaxing. Do you like Ireland?", si: "නිදහස් පාටයි. ඔයා අයර්ලන්තෙට කැමතිද?" },
-                { role: 'user', text: "Yes, people are nice but it is cold.", si: "ඔව්, මිනිස්සු හොඳයි, හැබැයි සීතලයි.", hint: "Nice but cold." },
-                { role: 'bot', text: "Haha, you will get used to it.", si: "හහ් හා, ඔයාට ඒක හුරු වෙයි." },
-                { role: 'user', text: "Okay sir. Have a good weekend.", si: "හරි සර්. සුභ සති අන්තයක්.", hint: "Have a good weekend." }
+                { r: 'b', t: "That was a hard week.", s: "මාර අමාරු සතියක්." },
+                { r: 'u', t: "Yes, very busy. But job is done.", s: "ඔව්, හරි බිසී. ඒත් වැඩේ ඉවරයි.", hint: "Yes very busy" },
+                { r: 'b', t: "Do you have plans for the weekend?", s: "සති අන්තයේ මොනවද ප්ලෑන්?" },
+                { r: 'u', t: "I will sleep and call my family.", s: "මම නිදාගෙන පවුලේ අයට කතා කරනවා.", hint: "Sleep and call family" },
+                { r: 'b', t: "Sounds relaxing. Do you like Ireland?", s: "නිදහස් පාටයි. ඔයා අයර්ලන්තෙට කැමතිද?" },
+                { r: 'u', t: "Yes, people are nice but it is cold.", s: "ඔව්, මිනිස්සු හොඳයි, හැබැයි සීතලයි.", hint: "Nice but cold" },
+                { r: 'b', t: "Haha, you will get used to it.", s: "හහ් හා, ඔයාට ඒක හුරු වෙයි." },
+                { r: 'u', t: "I hope so sir.", s: "එහෙම වෙයි කියලා හිතනවා සර්.", hint: "I hope so" },
+                { r: 'b', t: "Okay, see you Monday.", s: "හරි, සඳුදා හම්බෙමු." },
+                { r: 'u', t: "Have a good weekend.", s: "සුභ සති අන්තයක්.", hint: "Have a good weekend" }
             ]
         },
 
-        // --- 20. RAINY DAY ---
+        // --- 20. BAD WEATHER ---
         {
-            id: 20, title: "20. Irish Weather", icon: "🌧️", desc: "Working in bad weather.",
+            id: 20, title: "20. Irish Weather", icon: "🌧️", desc: "Rainy day work.",
             dialogue: [
-                { role: 'bot', text: "It is pouring rain again!", si: "ආයෙත් හෝ ගාලා වහිනවා!" },
-                { role: 'user', text: "Can we work outside?", si: "අපිට එළියේ වැඩ කරන්න පුළුවන්ද?", hint: "Can we work outside?" },
-                { role: 'bot', text: "No, it is too dangerous.", si: "නෑ, ඒක අනතුරුදායක වැඩියි." },
-                { role: 'user', text: "So what should we do?", si: "එහෙනම් අපි මොකද කරන්නේ?", hint: "What should we do?" },
-                { role: 'bot', text: "We will tidy the store room.", si: "අපි ස්ටෝ රූම් එක අස් කරමු." },
-                { role: 'user', text: "Okay, I will get the broom.", si: "හරි, මම කොස්ස අරන් එන්නම්.", hint: "I will get the broom." },
-                { role: 'bot', text: "Is your jacket waterproof?", si: "ඔයාගේ ජැකට් එකට වතුර යන්නෙ නැද්ද?" },
-                { role: 'user', text: "Yes, it is good quality.", si: "ඔව්, මේක හොඳ එකක්.", hint: "Yes, good quality." },
-                { role: 'bot', text: "Good. Keep warm.", si: "හොඳයි. රස්නෙට ඉන්න." },
-                { role: 'user', text: "Thanks sir.", si: "තැන්ක්ස් සර්.", hint: "Thanks sir." }
+                { r: 'b', t: "It is pouring rain again!", s: "ආයෙත් හෝ ගාලා වහිනවා!" },
+                { r: 'u', t: "Can we work outside?", s: "අපිට එළියේ වැඩ කරන්න පුළුවන්ද?", hint: "Can we work outside" },
+                { r: 'b', t: "No, it is too dangerous.", s: "නෑ, ඒක අනතුරුදායක වැඩියි." },
+                { r: 'u', t: "So what should we do?", s: "එහෙනම් අපි මොකද කරන්නේ?", hint: "What should we do" },
+                { r: 'b', t: "We will tidy the store room.", s: "අපි ස්ටෝ රූම් එක අස් කරමු." },
+                { r: 'u', t: "Okay, I will get the broom.", s: "හරි, මම කොස්ස අරන් එන්නම්.", hint: "I will get the broom" },
+                { r: 'b', t: "Is your jacket waterproof?", s: "ඔයාගේ ජැකට් එකට වතුර යන්නෙ නැද්ද?" },
+                { r: 'u', t: "Yes, it is good quality.", s: "ඔව්, මේක හොඳ එකක්.", hint: "Yes good quality" },
+                { r: 'b', t: "Good. Keep warm.", s: "හොඳයි. රස්නෙට ඉන්න." },
+                { r: 'u', t: "Thanks sir.", s: "තැන්ක්ස් සර්.", hint: "Thanks sir" },
+                { r: 'b', t: "Let's go inside.", s: "යමු ඇතුලට." },
+                { r: 'u', t: "After you sir.", s: "ඔබට පස්සේ සර්.", hint: "After you sir" }
             ]
         }
     ];
 
+    // Trigger the app start from PART 1
     app.data = scenarios;
     app.startApp();
 
