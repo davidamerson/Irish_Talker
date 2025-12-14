@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE IRISH TALKER - REAL VOICE</title>
+    <title>THE IRISH TALKER - MEGA EDITION</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
 
         :root {
-            --bg-dark: #111827;
-            --chat-bg: #1f2937;
-            --user-msg: #059669; /* WhatsApp Green */
-            --bot-msg: #374151;
-            --accent: #10b981;
-            --record-active: #ef4444; /* Red for recording */
-            --text-main: #f9fafb;
-            --text-sub: #9ca3af;
+            --bg-dark: #0f172a;
+            --chat-bg: #1e293b;
+            --user-msg: #059669;
+            --bot-msg: #334155;
+            --accent: #38bdf8; /* Sky Blue */
+            --record-active: #ef4444;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -44,29 +44,29 @@
             text-align: center;
             margin-bottom: 20px;
             padding: 20px 0;
-            border-bottom: 1px solid #374151;
+            border-bottom: 1px solid #334155;
         }
         .app-title { font-size: 24px; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
         .sub-title { font-size: 13px; color: var(--text-sub); margin-top: 5px; }
 
-        .scenario-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 50px; }
+        .scenario-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 50px; }
 
         .scenario-card {
             background: var(--chat-bg);
-            padding: 20px;
-            border-radius: 16px;
+            padding: 18px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            border: 1px solid #374151;
+            border: 1px solid #334155;
             cursor: pointer;
             transition: transform 0.2s;
         }
-        .scenario-card:active { transform: scale(0.98); background: #4b5563; }
-        .s-icon { font-size: 32px; margin-right: 15px; }
+        .scenario-card:active { transform: scale(0.98); background: #475569; }
+        .s-icon { font-size: 28px; margin-right: 15px; min-width: 40px; text-align: center; }
         .s-info { flex: 1; }
-        .s-title { font-weight: bold; font-size: 16px; }
-        .s-desc { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
-        .s-status { font-size: 12px; font-weight: bold; color: var(--accent); }
+        .s-title { font-weight: bold; font-size: 15px; color: white; }
+        .s-desc { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+        .s-status { font-size: 11px; font-weight: bold; color: var(--accent); background: rgba(56, 189, 248, 0.1); padding: 4px 8px; border-radius: 6px; }
 
         /* --- CHAT SCREEN --- */
         #conversation-screen {
@@ -75,99 +75,73 @@
         }
 
         .chat-header {
-            padding: 15px; background: #111827; border-bottom: 1px solid #374151;
+            padding: 15px; background: #0f172a; border-bottom: 1px solid #334155;
             display: flex; align-items: center; gap: 15px;
         }
-        .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0 10px; }
         
         .chat-area {
             flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
-            background-image: radial-gradient(#1f2937 1px, transparent 1px); background-size: 20px 20px;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px;
         }
 
         .bubble {
-            max-width: 80%; padding: 15px; border-radius: 18px; font-size: 15px; line-height: 1.5;
+            max-width: 85%; padding: 15px; border-radius: 18px; font-size: 15px; line-height: 1.5;
             position: relative; animation: popIn 0.3s ease;
         }
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .bot { align-self: flex-start; background: var(--bot-msg); border-bottom-left-radius: 4px; }
+        .bot { align-self: flex-start; background: var(--bot-msg); border-bottom-left-radius: 4px; border: 1px solid #475569; }
         .user { align-self: flex-end; background: var(--user-msg); color: white; border-bottom-right-radius: 4px; text-align: right; }
         
-        /* Audio Player inside Bubble */
-        .audio-player-bubble {
-            margin-top: 5px;
-            width: 100%;
-            height: 30px;
-            filter: invert(1); /* Make it look okay on dark bg */
-        }
-
-        .guide-text { font-size: 12px; color: #fbbf24; margin-top: 5px; font-weight: bold; display: block; }
-        .si-translation { font-size: 12px; color: #9ca3af; margin-top: 5px; display: block; font-style: italic; }
+        .audio-player-bubble { margin-top: 8px; width: 100%; height: 30px; filter: invert(1); opacity: 0.8; }
+        .si-translation { font-size: 12px; color: #94a3b8; margin-top: 6px; display: block; font-style: italic; }
 
         /* --- CONTROLS --- */
         .controls {
-            padding: 20px; background: #111827; border-top: 1px solid #374151;
+            padding: 20px; background: #0f172a; border-top: 1px solid #334155;
             display: flex; flex-direction: column; gap: 15px; align-items: center;
             position: relative;
         }
 
-        .instruction-box { text-align: center; color: var(--text-sub); font-size: 14px; min-height: 20px; transition: color 0.3s; }
+        .instruction-box { text-align: center; color: var(--text-sub); font-size: 14px; min-height: 20px; }
         .instruction-box.recording { color: var(--record-active); font-weight: bold; animation: pulseText 1s infinite; }
 
-        /* THE REAL MIC BUTTON */
-        .mic-container {
-            position: relative;
-            width: 80px; height: 80px;
-            display: flex; justify-content: center; align-items: center;
-        }
+        .mic-container { position: relative; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; }
 
         .mic-btn-large {
             width: 80px; height: 80px; border-radius: 50%;
-            background: var(--accent); border: none; color: #064e3b;
+            background: var(--accent); border: none; color: #0c4a6e;
             font-size: 32px; cursor: pointer; z-index: 2;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; justify-content: center;
-            /* Disable text selection on button */
-            -webkit-user-select: none; user-select: none;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center;
         }
-
-        /* Animation when holding */
         .mic-btn-large:active, .mic-btn-large.active {
-            transform: scale(1.2);
-            background: var(--record-active);
-            color: white;
+            transform: scale(1.2); background: var(--record-active); color: white;
             box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
         }
+        .mic-btn-large.disabled { background: #334155; color: #64748b; pointer-events: none; box-shadow: none; transform: scale(1); }
 
-        .mic-btn-large.disabled { background: #374151; color: #6b7280; pointer-events: none; box-shadow: none; transform: scale(1); }
-
-        /* Ripple Effect */
         .mic-ripple {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             border-radius: 50%; background: var(--record-active); opacity: 0; z-index: 1;
         }
-        .mic-btn-large.active ~ .mic-ripple {
-            animation: ripple 1s infinite;
-        }
+        .mic-btn-large.active ~ .mic-ripple { animation: ripple 1s infinite; }
 
-        @keyframes ripple {
-            0% { transform: scale(1); opacity: 0.6; }
-            100% { transform: scale(2); opacity: 0; }
-        }
+        @keyframes ripple { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2); opacity: 0; } }
         @keyframes pulseText { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         .action-row { display: flex; gap: 15px; width: 100%; }
         .sec-btn {
-            flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #374151;
-            background: #1f2937; color: white; font-size: 14px; cursor: pointer;
+            flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #334155;
+            background: #1e293b; color: white; font-size: 13px; cursor: pointer; font-weight: 600;
         }
+        .sec-btn:active { background: #334155; }
 
         .toast {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
             background: #10b981; color: white; padding: 10px 20px; border-radius: 20px;
-            font-weight: bold; transition: transform 0.3s; z-index: 200;
+            font-weight: bold; transition: transform 0.3s; z-index: 200; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
     </style>
@@ -178,7 +152,7 @@
     <div id="dashboard">
         <div class="header">
             <div class="app-title">THE IRISH TALKER</div>
-            <div class="sub-title">Real Voice Training Simulation</div>
+            <div class="sub-title">Real Voice • Mega Edition (20 Scenarios)</div>
         </div>
         <div class="scenario-list" id="scenario-container"></div>
     </div>
@@ -187,53 +161,217 @@
     <div id="conversation-screen">
         <div class="chat-header">
             <button class="back-btn" onclick="app.closeChat()">←</button>
-            <div class="partner-info">
-                <div class="partner-name" id="chat-partner">Liam (Boss)</div>
-                <div class="partner-status">Online</div>
+            <div style="flex:1;">
+                <div style="font-weight:bold; font-size:16px;" id="chat-partner">Liam</div>
+                <div style="font-size:12px; color:#38bdf8;">Online</div>
             </div>
         </div>
 
         <div class="chat-area" id="chat-box"></div>
 
         <div class="controls">
-            <div class="instruction-box" id="instruction-text">Listen to Liam...</div>
+            <div class="instruction-box" id="instruction-text">Listen...</div>
             
-            <!-- REAL MIC BUTTON -->
             <div class="mic-container">
                 <button id="mic-btn" class="mic-btn-large">🎙️</button>
                 <div class="mic-ripple"></div>
             </div>
             
             <div class="action-row">
-                <button class="sec-btn" onclick="app.replayAudio()">🔊 Replay Liam</button>
-                <button class="sec-btn" onclick="app.showHelp()">🆘 Help Me</button>
+                <button class="sec-btn" onclick="app.replayAudio()">🔊 Replay</button>
+                <button class="sec-btn" onclick="app.showHelp()">🆘 Help</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast">Great Job! 🎉</div>
+    <div id="toast" class="toast">Scenario Complete! 🏆</div>
 
     <script>
-        // --- DATA ---
+        // =============================================
+        // THE MEGA DATABASE (20 SCENARIOS)
+        // =============================================
         const scenarios = [
+            // --- SECTION 1: SITE WORK (CORE) ---
             {
-                id: 1, title: "Rebar & Concrete", icon: "🏗️", desc: "Explaining your main job.",
+                id: 1, title: "1. Day 1 Introduction", icon: "🤝", desc: "Meeting the boss for the first time.",
                 dialogue: [
-                    { role: 'bot', text: "Welcome Nuwan. What specific work can you do?", si: "සාදරයෙන් පිළිගන්නවා. ඔයාට කරන්න පුළුවන් විශේෂ වැඩ මොනවද?" },
-                    { role: 'user', text: "I do Steel Fixing and Concreting.", si: "මම යකඩ බැඳීම සහ කොන්ක්‍රීට් වැඩ කරනවා.", hint: "Say: I do Steel Fixing and Concreting." },
-                    { role: 'bot', text: "Can you read the drawings for the steel bars?", si: "ඔයාට යකඩ ප්ලෑන් කියවන්න පුළුවන්ද?" },
-                    { role: 'user', text: "Yes, I can read blueprints and cut bars.", si: "ඔව්, මට බ්ලූ-ප්‍රින්ට් කියවලා කම්බි කපන්න පුළුවන්.", hint: "Say: Yes, I can read blueprints." },
-                    { role: 'bot', text: "Do you know how to use the poker vibrator?", si: "ඔයා පෝකර් වයිබ්‍රේටරේ පාවිච්චි කරන්න දන්නවද?" },
-                    { role: 'user', text: "Yes sir. I know pouring and vibrating.", si: "ඔව් සර්. මම කොන්ක්‍රීට් දාන්න සහ වයිබ්‍රේට් කරන්න දන්නවා.", hint: "Say: Yes, I know pouring and vibrating." }
+                    { role: 'bot', text: "Hello Nuwan. Welcome to the site. I am Liam.", si: "හෙලෝ නුවන්. මම ලියම්." },
+                    { role: 'user', text: "Good morning Mr. Liam. Nice to meet you.", si: "ගුඩ් මෝනින් මිස්ටර් ලියම්. ඔබව හමුවීම සතුටක්.", hint: "Say: Good morning Mr. Liam." },
+                    { role: 'bot', text: "Do you have your safety boots and helmet?", si: "ඔයාගේ සේෆ්ටි බූට් සහ හෙල්මට් එක තියෙනවද?" },
+                    { role: 'user', text: "Yes sir. I am wearing them.", si: "ඔව් සර්. මම ඒවා දාගෙන ඉන්නේ.", hint: "Say: Yes, I am wearing them." }
                 ]
             },
             {
-                id: 2, title: "Welding Test", icon: "🔥", desc: "Answering technical questions.",
+                id: 2, title: "2. Rebar & Concrete Jobs", icon: "🏗️", desc: "Explaining your main skills.",
                 dialogue: [
-                    { role: 'bot', text: "We have some broken gates. Can you weld them?", si: "අපේ කැඩුනු ගේට්ටු වගයක් තියෙනවා. පාස්සන්න පුළුවන්ද?" },
+                    { role: 'bot', text: "What specific work are you good at?", si: "ඔයාට පුළුවන් විශේෂ වැඩ මොනවද?" },
+                    { role: 'user', text: "I do Steel Fixing and Concreting.", si: "මම යකඩ බැඳීම සහ කොන්ක්‍රීට් වැඩ කරනවා.", hint: "Say: I do Steel Fixing and Concreting." },
+                    { role: 'bot', text: "Can you read the drawings?", si: "ඔයාට ප්ලෑන් කියවන්න පුළුවන්ද?" },
+                    { role: 'user', text: "Yes, I can read drawings and cut bars.", si: "ඔව්, මට ප්ලෑන් කියවලා කම්බි කපන්න පුළුවන්.", hint: "Say: Yes, I can read drawings." }
+                ]
+            },
+            {
+                id: 3, title: "3. Welding Test", icon: "🔥", desc: "Discussing welding tasks.",
+                dialogue: [
+                    { role: 'bot', text: "We have some gates to weld. Can you do it?", si: "ගේට්ටු වගයක් තියෙනවා පාස්සන්න. පුළුවන්ද?" },
                     { role: 'user', text: "No problem. I am an Arc Welding expert.", si: "ප්‍රශ්නයක් නෑ. මම ආක් වෑල්ඩින් ගැන දක්ෂයි.", hint: "Say: No problem. I am an expert." },
-                    { role: 'bot', text: "What safety gear do you need?", si: "මොන වගේ ආරක්ෂක දේවල්ද ඔයාට ඕනා?" },
-                    { role: 'user', text: "I need a welding mask and leather gloves.", si: "මට වෑල්ඩින් මාස්ක් එකක් සහ ලෙදර් අත්වැසුම් ඕනා.", hint: "Say: I need mask and gloves." }
+                    { role: 'bot', text: "What gear do you need?", si: "මොන වගේ බඩුද ඕනා?" },
+                    { role: 'user', text: "I need a mask and leather gloves.", si: "මට මාස්ක් එකක් සහ ලෙදර් අත්වැසුම් ඕනා.", hint: "Say: Need mask and gloves." }
+                ]
+            },
+            {
+                id: 4, title: "4. Morning Instructions", icon: "📋", desc: "Taking orders.",
+                dialogue: [
+                    { role: 'bot', text: "Today, I need you to build that wall.", si: "අද ඔයා අර බිත්තිය හදන්න ඕන." },
+                    { role: 'user', text: "Okay. What is the mix ratio?", si: "හරි. මොකක්ද මිශ්‍රණ අනුපාතය?", hint: "Say: What is the mix ratio?" },
+                    { role: 'bot', text: "Use one part cement, four parts sand.", si: "සිමෙන්ති 1ට වැලි 4ක් දාන්න." },
+                    { role: 'user', text: "Understood. I will start now.", si: "තේරුනා. මම දැන් පටන් ගන්නම්.", hint: "Say: I will start now." }
+                ]
+            },
+            {
+                id: 5, title: "5. Asking for Tools", icon: "🛠️", desc: "Requesting equipment.",
+                dialogue: [
+                    { role: 'bot', text: "How is it going?", si: "කොහොමද වැඩේ?" },
+                    { role: 'user', text: "Good, but I need a big grinder.", si: "හොඳයි, ඒත් මට ලොකු ග්‍රයින්ඩරයක් ඕනා.", hint: "Say: I need a big grinder." },
+                    { role: 'bot', text: "Check the container. Anything else?", si: "කන්ටේනර් එක බලන්න. වෙන මොනවද?" },
+                    { role: 'user', text: "Yes, I need a long extension cord.", si: "ඔව්, මට දිග එක්ස්ටෙන්ෂන් එකක් ඕනා.", hint: "Say: Need extension cord." }
+                ]
+            },
+            {
+                id: 6, title: "6. Safety Induction", icon: "⛑️", desc: "Safety rules check.",
+                dialogue: [
+                    { role: 'bot', text: "Nuwan, where is your high-vis vest?", si: "නුවන්, කෝ ඔයාගේ ජැකට් එක?" },
+                    { role: 'user', text: "Sorry, it is in the bag. I will put it on.", si: "සොරි, ඒක බෑග් එකේ. මම දාගන්නම්.", hint: "Say: I will put it on." },
+                    { role: 'bot', text: "Please do. Safety is number one here.", si: "දාගන්න. මෙහේ ආරක්ෂාව තමයි අංක එක." },
+                    { role: 'user', text: "I understand. Safety first.", si: "මට තේරෙනවා. ආරක්ෂාව පළමුව.", hint: "Say: I understand. Safety first." }
+                ]
+            },
+            {
+                id: 7, title: "7. The Rain Delay", icon: "🌧️", desc: "Ireland rains a lot!",
+                dialogue: [
+                    { role: 'bot', text: "It is raining heavily now.", si: "දැන් හෝ ගාලා වැස්ස." },
+                    { role: 'user', text: "Do we stop working boss?", si: "අපි වැඩ නවත්තනවද බොස්?", hint: "Say: Do we stop working?" },
+                    { role: 'bot', text: "No, we will work inside the building.", si: "නෑ, අපි බිල්ඩිම ඇතුලේ වැඩ කරමු." },
+                    { role: 'user', text: "Okay, I will bring my tools inside.", si: "හරි, මම මගේ බඩු ටික ඇතුලට ගන්නම්.", hint: "Say: I will bring tools inside." }
+                ]
+            },
+            {
+                id: 8, title: "8. Lunch Break", icon: "🥪", desc: "Talking with coworkers.",
+                dialogue: [
+                    { role: 'bot', text: "Alright lads, time for lunch.", si: "හරි කොල්ලනේ, කෑම වෙලාව." },
+                    { role: 'user', text: "Is there a microwave in the canteen?", si: "කැන්ටීන් එකේ මයික්‍රෝවේව් එකක් තියෙනවද?", hint: "Say: Is there a microwave?" },
+                    { role: 'bot', text: "Yes, in the corner.", si: "ඔව්, අර මුල්ලේ." },
+                    { role: 'user', text: "Thanks. I need to heat my rice.", si: "තැන්ක්ස්. මට බත් එක රත් කරගන්න ඕනා.", hint: "Say: Need to heat my rice." }
+                ]
+            },
+            {
+                id: 9, title: "9. The Timesheet", icon: "📝", desc: "Getting paid correctly.",
+                dialogue: [
+                    { role: 'bot', text: "Nuwan, did you sign the book?", si: "නුවන්, පොතේ අත්සන් කළාද?" },
+                    { role: 'user', text: "Yes, I signed in at 8 AM.", si: "ඔව්, මම උදේ 8ට අත්සන් කළා.", hint: "Say: Signed in at 8." },
+                    { role: 'bot', text: "Did you work overtime yesterday?", si: "ඊයේ ඕටී (Overtime) කළාද?" },
+                    { role: 'user', text: "Yes, two hours extra yesterday.", si: "ඔව්, ඊයේ පැය දෙකක් වැඩිපුර කළා.", hint: "Say: Yes, two hours extra." }
+                ]
+            },
+            {
+                id: 10, title: "10. Machine Breakdown", icon: "⚙️", desc: "Reporting a fault.",
+                dialogue: [
+                    { role: 'bot', text: "Why is the mixer stopped?", si: "ඇයි මික්සර් එක නැවතුනේ?" },
+                    { role: 'user', text: "The machine is broken sir.", si: "මැෂිම කැඩිලා සර්.", hint: "Say: The machine is broken." },
+                    { role: 'bot', text: "What happened?", si: "මොකද වුනේ?" },
+                    { role: 'user', text: "There is no power. Maybe a fuse.", si: "කරන්ට් එන්නේ නෑ. ෆියුස් එකක් වෙන්න ඇති.", hint: "Say: No power. Maybe a fuse." }
+                ]
+            },
+            
+            // --- SECTION 2: LIFE IN IRELAND ---
+            {
+                id: 11, title: "11. At the Shop", icon: "🛒", desc: "Buying groceries.",
+                dialogue: [
+                    { role: 'bot', text: "Hello, do you need a bag?", si: "හෙලෝ, බෑග් එකක් ඕනද?" },
+                    { role: 'user', text: "No thanks. I have my own bag.", si: "එපා ස්තූතියි. මං ගාව බෑග් එකක් තියෙනවා.", hint: "Say: No thanks. I have a bag." },
+                    { role: 'bot', text: "That is 10 Euros please.", si: "යුරෝ 10යි." },
+                    { role: 'user', text: "Can I pay by card?", si: "කාඩ් එකෙන් ගෙවන්නද?", hint: "Say: Can I pay by card?" }
+                ]
+            },
+            {
+                id: 12, title: "12. Taking the Bus", icon: "🚌", desc: "Traveling.",
+                dialogue: [
+                    { role: 'bot', text: "(Driver waiting)", si: "(රියදුරු)" },
+                    { role: 'user', text: "Does this go to City Center?", si: "මේක සිටි සෙන්ටර් යනවද?", hint: "Say: Go to City Center?" },
+                    { role: 'bot', text: "Yes. 2.50 please.", si: "ඔව්. 2.50 යි." },
+                    { role: 'user', text: "Here is the money. Thanks.", si: "මෙන්න සල්ලි. තැන්ක්ස්.", hint: "Say: Here is the money." }
+                ]
+            },
+            {
+                id: 13, title: "13. Feeling Sick", icon: "🤒", desc: "Calling in sick.",
+                dialogue: [
+                    { role: 'bot', text: "Liam speaking.", si: "ලියම් කතා කරනවා." },
+                    { role: 'user', text: "Hello boss. I am sick today.", si: "හෙලෝ බොස්. මට අද අසනීපයි.", hint: "Say: Hello boss. I am sick." },
+                    { role: 'bot', text: "Oh, what's wrong?", si: "ආ, මොකද වුනේ?" },
+                    { role: 'user', text: "I have a bad fever.", si: "මට තද උණ.", hint: "Say: I have a bad fever." }
+                ]
+            },
+            {
+                id: 14, title: "14. Doctor's Visit", icon: "👨‍⚕️", desc: "Medical help.",
+                dialogue: [
+                    { role: 'bot', text: "Come in. Where does it hurt?", si: "එන්න. කොතනද රිදෙන්නේ?" },
+                    { role: 'user', text: "My back hurts very much.", si: "මගේ කොන්ද ගොඩක් රිදෙනවා.", hint: "Say: My back hurts." },
+                    { role: 'bot', text: "Did you lift something heavy?", si: "බර දෙයක් ඉස්සුවද?" },
+                    { role: 'user', text: "Yes, a cement bag.", si: "ඔව්, සිමෙන්ති කොට්ටයක්.", hint: "Say: Yes, a cement bag." }
+                ]
+            },
+            {
+                id: 15, title: "15. Bank / Money", icon: "🏦", desc: "Opening an account.",
+                dialogue: [
+                    { role: 'bot', text: "How can I help you today?", si: "මම කොහොමද උදව් කරන්නේ?" },
+                    { role: 'user', text: "I want to open a bank account.", si: "මට බැංකු ගිණුමක් අරින්න ඕනා.", hint: "Say: Open bank account." },
+                    { role: 'bot', text: "Do you have your passport?", si: "පාස්පෝට් එක තියෙනවද?" },
+                    { role: 'user', text: "Yes, here it is.", si: "ඔව්, මෙන්න.", hint: "Say: Yes, here it is." }
+                ]
+            },
+            {
+                id: 16, title: "16. Mistake on Site", icon: "⚠️", desc: "Fixing an error.",
+                dialogue: [
+                    { role: 'bot', text: "This measurement is wrong!", si: "මේ මිනුම වැරදියි!" },
+                    { role: 'user', text: "Sorry boss. I will fix it now.", si: "සොරි බොස්. මම දැන් හදන්නම්.", hint: "Say: Sorry. I will fix it." },
+                    { role: 'bot', text: "Be careful next time.", si: "ඊළඟ පාර පරිස්සම් වෙන්න." },
+                    { role: 'user', text: "It won't happen again.", si: "ආයේ එහෙම වෙන්නේ නෑ.", hint: "Say: It won't happen again." }
+                ]
+            },
+            {
+                id: 17, title: "17. Asking for Leave", icon: "✈️", desc: "Requesting holidays.",
+                dialogue: [
+                    { role: 'bot', text: "Yes Nuwan?", si: "ඔව් නුවන්?" },
+                    { role: 'user', text: "Boss, I need a holiday next month.", si: "බොස්, මට ලබන මාසේ නිවාඩුවක් ඕනා.", hint: "Say: Need a holiday." },
+                    { role: 'bot', text: "For how long?", si: "කොච්චර කාලෙකටද?" },
+                    { role: 'user', text: "One week please. Family matter.", si: "එක සතියක්. පවුලේ වැඩකට.", hint: "Say: One week please." }
+                ]
+            },
+            {
+                id: 18, title: "18. Emergency Drill", icon: "🚨", desc: "Fire alarm practice.",
+                dialogue: [
+                    { role: 'bot', text: "(ALARM SOUNDS) Everybody out!", si: "(සයිරන් එක වදී) හැමෝම එළියට!" },
+                    { role: 'user', text: "Where is the assembly point?", si: "එකතු වෙන තැන කොහෙද?", hint: "Say: Where is assembly point?" },
+                    { role: 'bot', text: "At the main gate. Go now!", si: "මේන් ගේට්ටුව ගාව. යන්න දැන්!" },
+                    { role: 'user', text: "Okay, I am going.", si: "හරි, මම යනවා.", hint: "Say: Okay, I am going." }
+                ]
+            },
+            {
+                id: 19, title: "19. End of Day", icon: "🌅", desc: "Clocking out.",
+                dialogue: [
+                    { role: 'bot', text: "Okay, pack up tools. Job done.", si: "හරි බඩු ටික අස්කරගන්න. වැඩේ ඉවරයි." },
+                    { role: 'user', text: "Okay boss. Everything is clean.", si: "හරි බොස්. හැමදේම සුද්ද කළා.", hint: "Say: Everything is clean." },
+                    { role: 'bot', text: "See you tomorrow at 8.", si: "හෙට 8ට හම්බෙමු." },
+                    { role: 'user', text: "See you. Have a good evening.", si: "හම්බෙමු. සුභ සැන්දෑවක්.", hint: "Say: Have a good evening." }
+                ]
+            },
+            {
+                id: 20, title: "20. The Weekend", icon: "🍻", desc: "Friday chat.",
+                dialogue: [
+                    { role: 'bot', text: "That's it for the week. Plans?", si: "සතිය ඉවරයි. මොනවද ප්ලෑන්?" },
+                    { role: 'user', text: "I will just relax and sleep.", si: "මම නිකන් රෙස්ට් කරලා නිදාගන්නවා.", hint: "Say: Relax and sleep." },
+                    { role: 'bot', text: "Good idea. You worked hard.", si: "හොඳ අදහස. ඔයා මහන්සි වුනා." },
+                    { role: 'user', text: "Thanks boss. Happy weekend.", si: "තැන්ක්ස් බොස්. සුභ සති අන්තයක්.", hint: "Say: Happy weekend." }
                 ]
             }
         ];
@@ -245,7 +383,6 @@
             isUserTurn: false,
             speech: new SpeechSynthesisUtterance(),
             
-            // Audio Recording Variables
             mediaRecorder: null,
             audioChunks: [],
             stream: null,
@@ -253,7 +390,7 @@
             init: function() {
                 this.renderDashboard();
                 this.setupVoice();
-                this.setupMicEvents(); // Initialize Mic Logic
+                this.setupMicEvents();
             },
 
             setupVoice: function() {
@@ -266,66 +403,37 @@
                 };
             },
 
-            // --- REAL MIC LOGIC ---
             setupMicEvents: function() {
                 const btn = document.getElementById('mic-btn');
-
-                // Mouse Events (PC)
                 btn.addEventListener('mousedown', (e) => this.startRecording(e));
                 btn.addEventListener('mouseup', (e) => this.stopRecording(e));
                 btn.addEventListener('mouseleave', (e) => {
                     if(this.mediaRecorder && this.mediaRecorder.state === 'recording') this.stopRecording(e);
                 });
-
-                // Touch Events (Mobile)
-                btn.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // Prevent ghost clicks
-                    this.startRecording(e);
-                });
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    this.stopRecording(e);
-                });
+                btn.addEventListener('touchstart', (e) => { e.preventDefault(); this.startRecording(e); });
+                btn.addEventListener('touchend', (e) => { e.preventDefault(); this.stopRecording(e); });
             },
 
             startRecording: async function(e) {
                 if(!this.isUserTurn || document.getElementById('mic-btn').classList.contains('disabled')) return;
-
                 try {
-                    // Request Mic Access (First time will ask permission)
-                    if (!this.stream) {
-                        this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    }
-
+                    if (!this.stream) this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     this.mediaRecorder = new MediaRecorder(this.stream);
                     this.audioChunks = [];
-
-                    this.mediaRecorder.addEventListener("dataavailable", event => {
-                        this.audioChunks.push(event.data);
-                    });
-
-                    this.mediaRecorder.addEventListener("stop", () => {
-                        this.processAudio();
-                    });
-
+                    this.mediaRecorder.addEventListener("dataavailable", event => this.audioChunks.push(event.data));
+                    this.mediaRecorder.addEventListener("stop", () => this.processAudio());
                     this.mediaRecorder.start();
-                    
-                    // UI Update
                     document.getElementById('mic-btn').classList.add('active');
                     document.getElementById('instruction-text').innerText = "Recording... Release to Send";
                     document.getElementById('instruction-text').classList.add('recording');
-
                 } catch (err) {
-                    alert("Error: Microphone access denied. Please allow microphone permissions in your browser settings.");
-                    console.error(err);
+                    alert("Allow microphone access!");
                 }
             },
 
             stopRecording: function(e) {
                 if(this.mediaRecorder && this.mediaRecorder.state === "recording") {
                     this.mediaRecorder.stop();
-                    
-                    // UI Update
                     document.getElementById('mic-btn').classList.remove('active');
                     document.getElementById('instruction-text').classList.remove('recording');
                     document.getElementById('instruction-text').innerText = "Processing...";
@@ -333,36 +441,20 @@
             },
 
             processAudio: function() {
-                // Create Audio Blob
                 const audioBlob = new Blob(this.audioChunks, { type: "audio/mpeg" });
                 const audioUrl = URL.createObjectURL(audioBlob);
-                
-                // Add User Bubble with Audio Player
                 const line = this.currentScenario.dialogue[this.dialogueIndex];
                 this.addBubble('user', line.text, line.si, audioUrl);
-
-                // Play back what user said immediately
                 const userAudio = new Audio(audioUrl);
                 userAudio.play();
-
-                // Wait for playback to finish (roughly) then continue
                 userAudio.onended = () => {
                     setTimeout(() => {
                         this.dialogueIndex++;
                         this.processStep();
-                    }, 1000);
+                    }, 800);
                 };
-                
-                // Fallback if audio event fails or is short
-                setTimeout(() => {
-                    if(this.isUserTurn) { // Only force if state hasn't changed
-                        this.dialogueIndex++;
-                        this.processStep();
-                    }
-                }, 5000); // Max wait 5 sec
             },
 
-            // --- CHAT FLOW ---
             renderDashboard: function() {
                 const container = document.getElementById('scenario-container');
                 container.innerHTML = '';
@@ -380,7 +472,7 @@
                 this.dialogueIndex = 0;
                 document.getElementById('dashboard').style.display = 'none';
                 document.getElementById('conversation-screen').style.display = 'flex';
-                document.getElementById('chat-partner').innerText = "Liam (Boss)";
+                document.getElementById('chat-partner').innerText = this.currentScenario.title.includes("Shop") ? "Shopkeeper" : (this.currentScenario.title.includes("Bus") ? "Driver" : (this.currentScenario.title.includes("Doctor") ? "Doctor" : "Liam (Boss)"));
                 document.getElementById('chat-box').innerHTML = '';
                 this.processStep();
             },
@@ -389,19 +481,18 @@
                 window.speechSynthesis.cancel();
                 document.getElementById('conversation-screen').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'flex';
-                // Stop mic stream to release icon
-                if(this.stream) {
-                    this.stream.getTracks().forEach(track => track.stop());
-                    this.stream = null;
-                }
+                if(this.stream) { this.stream.getTracks().forEach(track => track.stop()); this.stream = null; }
             },
 
             processStep: function() {
                 if(this.dialogueIndex >= this.currentScenario.dialogue.length) {
-                    this.addBubble('bot', "Well done Nuwan! Job secured.", "නියමයි නුවන්! වැඩේ ගොඩ.");
-                    this.speak("Well done Nuwan! Job secured.");
+                    this.addBubble('bot', "Great job! Conversation complete.", "නියමයි! සංවාදය අවසන්.");
+                    this.speak("Great job! Conversation complete.");
                     document.getElementById('mic-btn').classList.add('disabled');
-                    document.getElementById('instruction-text').innerText = "Chat Finished ✅";
+                    document.getElementById('instruction-text').innerText = "Finished ✅";
+                    const t = document.getElementById('toast');
+                    t.style.transform = "translateX(-50%) translateY(20px)";
+                    setTimeout(() => t.style.transform = "translateX(-50%) translateY(-100px)", 2000);
                     return;
                 }
 
@@ -410,8 +501,7 @@
                 if(line.role === 'bot') {
                     this.isUserTurn = false;
                     document.getElementById('mic-btn').classList.add('disabled');
-                    document.getElementById('instruction-text').innerText = "Listen to Liam...";
-                    
+                    document.getElementById('instruction-text').innerText = "Listen...";
                     this.addBubble('bot', line.text, line.si);
                     this.speak(line.text, () => {
                         this.dialogueIndex++;
@@ -420,7 +510,7 @@
                 } else {
                     this.isUserTurn = true;
                     document.getElementById('mic-btn').classList.remove('disabled');
-                    document.getElementById('instruction-text').innerText = "HOLD Mic & Speak!";
+                    document.getElementById('instruction-text').innerText = "Hold Mic & Speak";
                 }
             },
 
@@ -428,12 +518,7 @@
                 const box = document.getElementById('chat-box');
                 const div = document.createElement('div');
                 div.className = `bubble ${role}`;
-                
-                let audioHtml = '';
-                if(audioUrl) {
-                    audioHtml = `<audio controls src="${audioUrl}" class="audio-player-bubble"></audio>`;
-                }
-
+                let audioHtml = audioUrl ? `<audio controls src="${audioUrl}" class="audio-player-bubble"></audio>` : '';
                 div.innerHTML = `${text} <span class="si-translation">${siTranslation}</span> ${audioHtml}`;
                 box.appendChild(div);
                 box.scrollTop = box.scrollHeight;
