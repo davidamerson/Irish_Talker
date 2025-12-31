@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRISH TALKER - ULTIMATE SMART</title>
+    <title>IRISH TALKER - FINAL VERSION</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Sans+Sinhala:wght@400;700&display=swap');
 
         :root {
             --bg-dark: #0f172a;
@@ -13,6 +13,7 @@
             --user-msg: #059669; 
             --bot-msg: #334155;
             --accent: #38bdf8;
+            --pronounce: #fbbf24; /* Yellow for pronunciation */
             --error: #ef4444;
             --success: #22c55e;
             --text-main: #f8fafc;
@@ -22,7 +23,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', 'Noto Sans Sinhala', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
             margin: 0;
@@ -74,15 +75,17 @@
         }
         
         .bubble { 
-            max-width: 85%; padding: 15px; border-radius: 18px; font-size: 15px; line-height: 1.5; 
-            position: relative; animation: popIn 0.3s ease; 
+            max-width: 90%; padding: 15px; border-radius: 18px; font-size: 16px; line-height: 1.4; 
+            position: relative; animation: popIn 0.3s ease; display: flex; flex-direction: column; gap: 5px;
         }
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .bot { align-self: flex-start; background: var(--bot-msg); border-bottom-left-radius: 4px; border: 1px solid #475569; }
         .user { align-self: flex-end; background: var(--user-msg); color: white; border-bottom-right-radius: 4px; text-align: right; }
         
-        .si-translation { font-size: 12px; color: #cbd5e1; margin-top: 5px; display: block; font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; }
+        .eng-text { font-weight: 600; font-size: 16px; color: #fff; }
+        .pronounce-text { font-size: 13px; color: var(--pronounce); font-style: italic; }
+        .si-translation { font-size: 13px; color: #cbd5e1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; margin-top: 2px; }
 
         /* --- FEEDBACK AREA --- */
         .feedback-box {
@@ -131,8 +134,8 @@
     <!-- SCREEN 1: DASHBOARD -->
     <div id="dashboard">
         <div class="header">
-            <div class="app-title">IRISH TALKER <span style="font-size:12px; background:var(--success); color:black; padding:2px 6px; border-radius:4px;">ULTIMATE</span></div>
-            <div class="sub-title">20 Full Scenarios • Smart Correction</div>
+            <div class="app-title">IRISH TALKER <span style="font-size:12px; background:var(--success); color:black; padding:2px 6px; border-radius:4px;">PRO</span></div>
+            <div class="sub-title">100% Accurate • Full Sentences</div>
         </div>
         <div class="scenario-list" id="scenario-container">
             <!-- Scenarios will be loaded here from PART 2 -->
@@ -159,7 +162,7 @@
             
             <div class="action-row">
                 <button class="sec-btn" onclick="app.replayBot()">🔊 Replay</button>
-                <button class="sec-btn" onclick="app.showHelp()">🆘 Show Answer</button>
+                <button class="sec-btn" onclick="app.showHelp()">🆘 Help</button>
                 <button class="sec-btn skip-btn" onclick="app.forceNext()" id="skip-btn" style="display:none;">Skip ▶</button>
             </div>
         </div>
@@ -174,8 +177,8 @@
         synth: window.speechSynthesis,
         recognition: null,
         isListening: false,
+        voice: null,
 
-        // Will be called after data is loaded
         startApp: function() {
             this.renderDashboard();
             this.setupVoice();
@@ -183,12 +186,18 @@
         },
 
         setupVoice: function() {
+            // Find a clear standard English voice
+            const setVoice = () => {
+                const voices = this.synth.getVoices();
+                // Priority: Google UK Male -> Any UK -> Any English
+                this.voice = voices.find(v => v.lang.includes('GB') && v.name.includes('Male')) || 
+                             voices.find(v => v.lang.includes('GB')) ||
+                             voices.find(v => v.lang.includes('en'));
+            };
             if(this.synth.onvoiceschanged !== undefined) {
-                this.synth.onvoiceschanged = () => {
-                    const voices = this.synth.getVoices();
-                    this.voice = voices.find(v => (v.lang.includes('GB') || v.lang.includes('UK')) && v.name.includes('Male')) || voices[0];
-                };
+                this.synth.onvoiceschanged = setVoice;
             }
+            setVoice();
         },
 
         setupRecognition: function() {
@@ -219,11 +228,10 @@
                 };
 
                 this.recognition.onerror = (event) => {
-                    document.getElementById('status-text').innerText = "Error. Try again.";
+                    document.getElementById('status-text').innerText = "Tap mic and try again.";
                     document.getElementById('skip-btn').style.display = 'block';
                 };
                 
-                // Mic Button Click
                 document.getElementById('mic-btn').onclick = () => {
                     if (this.isListening) this.recognition.stop();
                     else {
@@ -233,6 +241,7 @@
 
             } else {
                 alert("Please use Google Chrome for Speech Recognition.");
+                document.getElementById('status-text').innerText = "Browser not supported.";
             }
         },
 
@@ -275,12 +284,11 @@
         processStep: function() {
             const total = this.activeScenario.dialogue.length;
             
-            // Update Progress
             document.getElementById('step-counter').innerText = `${this.index}/${total}`;
             document.getElementById('progress-bar').style.width = `${(this.index / total) * 100}%`;
 
             if(this.index >= total) {
-                this.addBubble('bot', "Conversation Finished! Well done.", "සංවාදය අවසන්. නියමයි.");
+                this.addBubble('bot', "Conversation Finished! Well done.", "කන්වසේෂන් ෆිනිෂ්ඩ්! වෙල් ඩන්.", "සංවාදය අවසන්. නියමයි.");
                 this.speak("Conversation Finished! Well done.");
                 document.getElementById('mic-btn').classList.add('disabled');
                 document.getElementById('status-text').innerText = "Done ✅";
@@ -291,8 +299,8 @@
             document.getElementById('skip-btn').style.display = 'none';
 
             if(line.role === 'bot') {
-                this.setMicState(false, "Listen to Liam...");
-                this.addBubble('bot', line.text, line.si);
+                this.setMicState(false, "Listen to the Boss...");
+                this.addBubble('bot', line.text, line.pronounce, line.si);
                 this.speak(line.text, () => {
                     this.index++;
                     setTimeout(() => this.processStep(), 500);
@@ -303,9 +311,15 @@
         },
 
         checkAnswer: function(userSaid) {
-            const target = this.activeScenario.dialogue[this.index].hint;
-            const similarity = this.calculateSimilarity(userSaid.toLowerCase(), target.toLowerCase());
-            const isCorrect = similarity > 0.4; // 40% match allowed
+            // FIXED: Directly check against the full text to ensure accuracy
+            const target = this.activeScenario.dialogue[this.index].text; 
+            
+            // Simple normalization for better matching
+            const cleanUser = userSaid.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+            const cleanTarget = target.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+            
+            const similarity = this.calculateSimilarity(cleanUser, cleanTarget);
+            const isCorrect = similarity > 0.4; // 40% match allowed for beginners
 
             const feedbackHtml = `
                 <div class="feedback-box" style="display:block; border-color: ${isCorrect ? '#22c55e' : '#ef4444'}">
@@ -313,12 +327,8 @@
                         <div class="fb-label">You Said:</div>
                         <div class="fb-text" style="color: ${isCorrect ? '#86efac' : '#fca5a5'}">"${userSaid}"</div>
                     </div>
-                    <div class="fb-row">
-                        <div class="fb-label">Expected:</div>
-                        <div class="fb-text" style="color: #93c5fd">"${target}"</div>
-                    </div>
                     <div class="match-score ${isCorrect ? 'score-good' : 'score-bad'}">
-                        ${isCorrect ? 'PERFECT! KEEP GOING' : 'TRY AGAIN'}
+                        ${isCorrect ? 'GOOD JOB!' : 'TRY AGAIN'}
                     </div>
                 </div>
             `;
@@ -330,8 +340,9 @@
             box.scrollTop = box.scrollHeight;
 
             if (isCorrect) {
+                const line = this.activeScenario.dialogue[this.index];
                 setTimeout(() => {
-                    this.addBubble('user', target, "Correct!", true);
+                    this.addBubble('user', line.text, line.pronounce, line.si, true);
                     this.index++;
                     this.processStep();
                 }, 1500);
@@ -343,14 +354,12 @@
 
         forceNext: function() {
             const line = this.activeScenario.dialogue[this.index];
-            this.addBubble('user', line.hint, "Skipped", true);
+            this.addBubble('user', line.text, line.pronounce, "Skipped", true);
             this.index++;
             this.processStep();
         },
 
         calculateSimilarity: function(s1, s2) {
-            s1 = s1.replace(/[^a-z0-9 ]/g, "");
-            s2 = s2.replace(/[^a-z0-9 ]/g, "");
             const words1 = s1.split(/\s+/);
             const words2 = s2.split(/\s+/);
             let matches = 0;
@@ -358,13 +367,17 @@
             return matches / words2.length;
         },
 
-        addBubble: function(role, text, si, isCorrect=false) {
+        addBubble: function(role, text, pronounce, si, isCorrect=false) {
             const box = document.getElementById('chat-box');
             const div = document.createElement('div');
             div.className = `bubble ${role}`;
             if(isCorrect) div.style.border = "2px solid #22c55e"; 
             
-            div.innerHTML = `<div>${text}</div><span class="si-translation">${si}</span>`;
+            div.innerHTML = `
+                <div class="eng-text">${text}</div>
+                <div class="pronounce-text">${pronounce}</div>
+                <div class="si-translation">${si}</div>
+            `;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         },
@@ -373,7 +386,8 @@
             this.synth.cancel();
             const u = new SpeechSynthesisUtterance(text);
             u.voice = this.voice;
-            u.rate = 0.9;
+            u.rate = 0.9; 
+            u.pitch = 1.0;
             u.onend = callback || null;
             this.synth.speak(u);
         },
@@ -387,393 +401,309 @@
         },
 
         replayBot: function() {
-            if(this.index > 0) this.speak(this.activeScenario.dialogue[this.index - 1].text);
+            if(this.activeScenario.dialogue[this.index].role === 'user' && this.index > 0) {
+                 this.speak(this.activeScenario.dialogue[this.index - 1].text);
+            } else if (this.activeScenario.dialogue[this.index].role === 'bot') {
+                 this.speak(this.activeScenario.dialogue[this.index].text);
+            }
         },
 
+        // FIXED: Now ensures the FULL sentence is displayed and spoken
         showHelp: function() {
-            const hint = this.activeScenario.dialogue[this.index].hint;
-            alert("Say: " + hint);
-            this.speak(hint);
+            const line = this.activeScenario.dialogue[this.index];
+            alert("SAY THIS:\n\n" + line.text + "\n\n(" + line.pronounce + ")");
+            this.speak(line.text);
         }
     };
 
     // =============================================
-    // PART 2: DATA STARTS BELOW
+    // PART 2: FINAL DATA (CORRECT FULL SENTENCES)
     // =============================================
-const scenarios = [
-        // =================================================================
-        // SECTION 1: WORK & SITE SCENARIOS (වැඩබිමේ ජීවිතය)
-        // =================================================================
-
-        // --- 1. THE JOB INTERVIEW (14 Steps) ---
+    const scenarios = [
+        // --- 1. THE JOB INTERVIEW ---
         {
-            id: 1, title: "1. The Job Interview", icon: "👔", desc: "Your most important conversation.",
+            id: 1, title: "1. The Job Interview", icon: "👔", desc: "Formal and confident introduction.",
             dialogue: [
-                { role: 'bot', text: "Good morning. Please come in and sit down.", si: "සුභ උදෑසනක්. ඇතුලට ඇවිත් වාඩි වෙන්න." },
-                { role: 'user', text: "Good morning sir. Thank you.", si: "සුභ උදෑසනක් සර්. ස්තූතියි.", hint: "Good morning sir" },
-                { role: 'bot', text: "I have your CV here. Can you introduce yourself?", si: "ඔයාගේ CV එක මං ළඟ තියෙනවා. ඔයා ගැන පොඩ්ඩක් කියන්න." },
-                { role: 'user', text: "I am Nuwan. I have 15 years experience in construction.", si: "මම නුවන්. මට ඉදිකිරීම් ක්ෂේත්‍රයේ අවුරුදු 15ක පලපුරුද්ද තියෙනවා.", hint: "I am Nuwan. 15 years experience" },
-                { role: 'bot', text: "That is impressive. What is your main trade?", si: "ඒක නියමයි. ඔයාගේ ප්‍රධානම රස්සාව මොකක්ද?" },
-                { role: 'user', text: "I am a multi-skilled technician. Mainly Welding and Steel Fixing.", si: "මම බහු-නිපුණතා ශිල්පියෙක්. ප්‍රධාන වශයෙන් වෑල්ඩින් සහ යකඩ බැඳීම.", hint: "Welding and Steel Fixing" },
-                { role: 'bot', text: "What type of welding can you do?", si: "මොන වගේ වෑල්ඩින් ද ඔයාට පුළුවන්?" },
-                { role: 'user', text: "I am an expert in Arc Welding and heavy steel fabrication.", si: "මම ආක් වෑල්ඩින් සහ බර යකඩ වැඩ වලට දක්ෂයි.", hint: "Expert in Arc Welding" },
-                { role: 'bot', text: "Can you read technical drawings and blueprints?", si: "ඔයාට ටෙක්නිකල් ඩ්‍රෝවින්ග්ස් සහ ප්ලෑන් කියවන්න පුළුවන්ද?" },
-                { role: 'user', text: "Yes sir. I can read plans and work without supervision.", si: "ඔව් සර්. මට ප්ලෑන් කියවලා තනියම වැඩ කරන්න පුළුවන්.", hint: "Yes I can read plans" },
-                { role: 'bot', text: "Do you have experience with concrete work?", si: "කොන්ක්‍රීට් එක්ක වැඩ කරලා තියෙනවද?" },
-                { role: 'user', text: "Yes, I can do pouring, vibrating, and leveling.", si: "ඔව්, මට වත් කරන්න, වයිබ්‍රේට් කරන්න සහ ලෙවල් කරන්න පුළුවන්.", hint: "Pouring vibrating and leveling" },
-                { role: 'bot', text: "Do you have a heavy vehicle license?", si: "බර වාහන බලපත්‍රයක් තියෙනවද?" },
-                { role: 'user', text: "Yes, I have a valid heavy vehicle license.", si: "ඔව්, මට වලංගු බලපත්‍රයක් තියෙනවා.", hint: "Yes I have a license" },
-                { role: 'bot', text: "Why do you want to work in Ireland?", si: "ඇයි අයර්ලන්තයේ වැඩ කරන්න කැමති?" },
-                { role: 'user', text: "I want to work hard and build a better future.", si: "මට මහන්සි වෙලා වැඩ කරලා හොඳ අනාගතයක් හදන්න ඕනා.", hint: "Build a better future" },
-                { role: 'bot', text: "Okay Nuwan. We will contact you soon.", si: "හරි නුවන්. අපි ඉක්මනට දන්වන්නම්." },
-                { role: 'user', text: "Thank you for your time sir.", si: "ඔබේ කාලයට ස්තූතියි සර්.", hint: "Thank you sir" }
+                { role: 'bot', text: "Good morning. Please come in and sit down.", pronounce: "ගුඩ් මෝනින්. ප්ලීස් කම් ඉන් ඇන්ඩ් සිට් ඩවුන්.", si: "සුභ උදෑසනක්. කරුණාකර ඇතුලට ඇවිත් වාඩි වෙන්න." },
+                { role: 'user', text: "Good morning sir. Thank you.", pronounce: "ගුඩ් මෝනින් සර්. තැන්ක් යූ.", si: "සුභ උදෑසනක් සර්. ස්තූතියි." },
+                { role: 'bot', text: "I have your CV here. Can you tell me about yourself?", pronounce: "අයි හෑව් යො සීවී හියර්. කැන් යූ ටෙල් මී අබවුට් යොසෙල්ෆ්?", si: "ඔයාගේ CV එක මං ළඟ තියෙනවා. ඔයා ගැන මට කියන්න පුළුවන්ද?" },
+                { role: 'user', text: "I am Nuwan. I have 15 years experience in construction.", pronounce: "අයි ඈම් නුවන්. අයි හෑව් ෆිෆ්ටීන් ඉයර්ස් එක්ස්පීරියන්ස් ඉන් කන්ස්ට්‍රක්ෂන්.", si: "මම නුවන්. මට ඉදිකිරීම් ක්ෂේත්‍රයේ අවුරුදු 15ක පලපුරුද්ද තියෙනවා." },
+                { role: 'bot', text: "Very good. What is your main skill?", pronounce: "වෙරි ගුඩ්. වොට් ඊස් යො මේන් ස්කිල්?", si: "ඉතා හොඳයි. ඔයාගේ ප්‍රධාන දක්ෂතාවය කුමක්ද?" },
+                { role: 'user', text: "I specialize in Welding and Steel Fixing.", pronounce: "අයි ස්පෙෂලයිස් ඉන් වෙල්ඩින් ඇන්ඩ් ස්ටීල් ෆික්සින්.", si: "මම විශේෂඥ දැනුම තියෙන්නේ වෑල්ඩින් සහ යකඩ වැඩ වලට." },
+                { role: 'bot', text: "Can you read technical drawings?", pronounce: "කැන් යූ රීඩ් ටෙක්නිකල් ඩ්‍රෝවින්ග්ස්?", si: "ඔයාට තාක්ෂණික සැලසුම් (ප්ලෑන්) කියවන්න පුළුවන්ද?" },
+                { role: 'user', text: "Yes sir, I can read plans very well.", pronounce: "යෙස් සර්, අයි කැන් රීඩ් ප්ලෑන්ස් වෙරි වෙල්.", si: "ඔව් සර්, මට ප්ලෑන් ඉතා හොඳින් කියවන්න පුළුවන්." },
+                { role: 'bot', text: "Do you have your Safe Pass card?", pronounce: "ඩූ යූ හෑව් යො සේෆ් පාස් කාඩ්?", si: "ඔයා ගාව 'සේෆ් පාස්' කාඩ් එක තියෙනවද?" },
+                { role: 'user', text: "Yes, I have a valid Safe Pass.", pronounce: "යෙස්, අයි හෑව් අ වැලිඩ් සේෆ් පාස්.", si: "ඔව්, මං ගාව වලංගු සේෆ් පාස් එකක් තියෙනවා." },
+                { role: 'bot', text: "When can you start working?", pronounce: "වෙන් කැන් යූ ස්ටාට් වර්කින්?", si: "කවදද වැඩ පටන් ගන්න පුළුවන්?" },
+                { role: 'user', text: "I can start tomorrow, sir.", pronounce: "අයි කැන් ස්ටාට් ටුමෝරෝ, සර්.", si: "මට හෙට පටන් ගන්න පුළුවන් සර්." },
+                { role: 'bot', text: "Excellent. See you on Monday at 7 am.", pronounce: "එක්සලන්ට්. සී යූ ඔන් මන්ඩේ ඇට් සෙවන් ඒ.එම්.", si: "නියමයි. සඳුදා උදේ 7ට හම්බෙමු." },
+                { role: 'user', text: "Thank you sir. See you then.", pronounce: "තැන්ක් යූ සර්. සී යූ දෙන්.", si: "ස්තූතියි සර්. එහෙනම් හම්බෙමු." }
             ]
         },
 
-        // --- 2. FIRST DAY INDUCTION (12 Steps) ---
+        // --- 2. SITE INDUCTION ---
         {
-            id: 2, title: "2. Site Induction", icon: "🚧", desc: "Safety rules and meeting the manager.",
+            id: 2, title: "2. Site Induction", icon: "🚧", desc: "Learning the rules.",
             dialogue: [
-                { role: 'bot', text: "Welcome to the site Nuwan. I am the Site Manager.", si: "සයිට් එකට සාදරයෙන් පිළිගන්නවා. මම සයිට් මැනේජර්." },
-                { role: 'user', text: "Good morning sir. Happy to be here.", si: "ගුඩ් මෝනින් සර්. මෙහේ ආපු එක සතුටක්.", hint: "Happy to be here" },
-                { role: 'bot', text: "First, do you have your Safe Pass card?", si: "ඉස්සෙල්ලාම, ඔයාගේ 'සේෆ් පාස්' කාඩ් එක තියෙනවද?" },
-                { role: 'user', text: "Yes, here is my Safe Pass card.", si: "ඔව්, මෙන්න මගේ කාඩ් එක.", hint: "Here is my Safe Pass" },
-                { role: 'bot', text: "Good. Do you have your PPE?", si: "හොඳයි. ඔයාගේ ආරක්ෂක ඇඳුම් (PPE) තියෙනවද?" },
-                { role: 'user', text: "Yes, I have my helmet, boots, and vest.", si: "ඔව්, මං ගාව හෙල්මට්, බූට් සහ ජැකට් එක තියෙනවා.", hint: "Helmet boots and vest" },
-                { role: 'bot', text: "On this site, safety is the number one rule.", si: "මේ සයිට් එකේ ආරක්ෂාව තමයි පළවෙනි නීතිය." },
-                { role: 'user', text: "I understand. Safety First is my motto.", si: "මට තේරෙනවා. ආරක්ෂාව පළමුව.", hint: "Safety First" },
-                { role: 'bot', text: "If you see a hazard, you must report it.", si: "අනතුරක් දැක්කොත්, අනිවාර්යයෙන්ම කියන්න ඕනා." },
-                { role: 'user', text: "I will report any danger immediately.", si: "මම ඕනෑම අනතුරක් ඉක්මනට රිපෝට් කරන්නම්.", hint: "Report danger immediately" },
-                { role: 'bot', text: "Do not use your phone while working.", si: "වැඩ කරන වෙලාවට ෆෝන් පාවිච්චි කරන්න එපා." },
-                { role: 'user', text: "Understood sir. Phone stays in the bag.", si: "තේරුනා සර්. ෆෝන් එක බෑග් එකේ තියෙන්නේ.", hint: "Phone stays in the bag" },
-                { role: 'bot', text: "Great. Now, go to the container and meet Mike.", si: "නියමයි. දැන් කන්ටේනර් එකට ගිහින් මයික්ව හම්බෙන්න." },
-                { role: 'user', text: "Okay, I will go find Mike now.", si: "හරි, මම දැන් මයික්ව හොයාගෙන යන්නම්.", hint: "Go find Mike now" }
+                { role: 'bot', text: "Welcome to the site Nuwan. Do you have your PPE?", pronounce: "වෙල්කම් ටු ද සයිට් නුවන්. ඩූ යූ හෑව් යො පී.පී.ඊ?", si: "සයිට් එකට සාදරයෙන් පිළිගන්නවා. ඔයාගේ ආරක්ෂිත ඇඳුම් (PPE) තියෙනවද?" },
+                { role: 'user', text: "Yes, I have my boots, helmet and vest.", pronounce: "යෙස්, අයි හෑව් මයි බූට්ස්, හෙල්මට් ඇන්ඩ් වෙස්ට්.", si: "ඔව්, මං ගාව බූට්, හෙල්මට් එක සහ ජැකට් එක තියෙනවා." },
+                { role: 'bot', text: "You must wear the helmet at all times.", pronounce: "යූ මස්ට් වෙයා ද හෙල්මට් ඇට් ඕල් ටයිම්ස්.", si: "ඔයා හෙල්මට් එක හැම වෙලාවෙම දාගෙන ඉන්න ඕනා." },
+                { role: 'user', text: "I understand. Safety is important.", pronounce: "අයි අන්ඩර්ස්ටෑන්ඩ්. සේෆ්ටි ඊස් ඉම්පෝටන්ට්.", si: "මට තේරෙනවා. ආරක්ෂාව වැදගත්." },
+                { role: 'bot', text: "We do not use mobile phones while working.", pronounce: "වී ඩූ නොට් යූස් මොබයිල් ෆෝන්ස් වයිල් වර්කින්.", si: "අපි වැඩ කරන ගමන් ෆෝන් පාවිච්චි කරන්නේ නෑ." },
+                { role: 'user', text: "Okay, I will keep it in my bag.", pronounce: "ඕකේ, අයි විල් කීප් ඉට් ඉන් මයි බෑග්.", si: "හරි, මම ඒක මගේ බෑග් එකේ තියන්නම්." },
+                { role: 'bot', text: "Please sign this form here.", pronounce: "ප්ලීස් සයින් දිස් ෆෝම් හියර්.", si: "කරුණාකරලා මේ ෆෝම් එක අත්සන් කරන්න." },
+                { role: 'user', text: "Should I sign my full name?", pronounce: "ෂුඩ් අයි සයින් මයි ෆුල් නේම්?", si: "මම මගේ සම්පූර්ණ නම අත්සන් කරන්නද?" },
+                { role: 'bot', text: "Yes please. Now go and find Mike.", pronounce: "යෙස් ප්ලීස්. නව් ගෝ ඇන්ඩ් ෆයින්ඩ් මයික්.", si: "ඔව් කරුණාකරලා. දැන් ගිහින් මයික්ව හොයාගන්න." },
+                { role: 'user', text: "Okay, I will go now. Thank you.", pronounce: "ඕකේ, අයි විල් ගෝ නව්. තැන්ක් යූ.", si: "හරි, මම දැන් යනවා. ස්තූතියි." }
             ]
         },
 
-        // --- 3. STEEL FIXING TASK (12 Steps) ---
+        // --- 3. STEEL FIXING ---
         {
-            id: 3, title: "3. Steel Fixing", icon: "🏗️", desc: "Reading plans and tying steel.",
+            id: 3, title: "3. Steel Fixing", icon: "🏗️", desc: "Understanding the task.",
             dialogue: [
-                { role: 'bot', text: "Nuwan, look at this drawing for the column.", si: "නුවන්, මේ කණුවේ ප්ලෑන් එක බලන්න." },
-                { role: 'user', text: "Okay sir. Let me check the details.", si: "හරි සර්. මම විස්තර බලන්නම්.", hint: "Let me check the details" },
-                { role: 'bot', text: "We need 4 main bars. What size is written there?", si: "අපිට මේන් බාර් 4ක් ඕනා. මොකක්ද සයිස් එක?" },
-                { role: 'user', text: "It says T16 bars for the main steel.", si: "මේකේ තියෙන්නේ T16 (මිලිමීටර් 16) කම්බි කියලා.", hint: "T16 bars" },
-                { role: 'bot', text: "Correct. And what about the links?", si: "හරි. එතකොට මුදු (ලින්ක්ස්) වලට?" },
-                { role: 'user', text: "Links are T10 bars at 200mm spacing.", si: "මුදු වලට T10 කම්බි, මිලිමීටර් 200 පරතරය.", hint: "T10 bars at 200mm" },
-                { role: 'bot', text: "Do you have your tying wire and nips?", si: "ඔයා ගාව බඳින කම්බි සහ අඬුව තියෙනවද?" },
-                { role: 'user', text: "I have the nips, but I need wire.", si: "අඬුව තියෙනවා, ඒත් කම්බි ඕනා.", hint: "I need wire" },
-                { role: 'bot', text: "Grab a coil of wire from the store.", si: "ස්ටෝරුවෙන් කම්බි රෝලක් ගන්න." },
-                { role: 'user', text: "Okay. Do we need cover blocks?", si: "හරි. අපිට කවර් බ්ලොක්ස් ඕනද?" },
-                { role: 'bot', text: "Yes, use the 40mm spacers.", si: "ඔව්, 40mm ස්පේසර්ස් පාවිච්චි කරන්න." },
-                { role: 'user', text: "Understood. I will start fixing now.", si: "තේරුනා. මම දැන් බඳින්න ගන්නම්.", hint: "I will start fixing now" },
-                { role: 'bot', text: "Keep the spacing accurate.", si: "පරතරය හරියට තියාගන්න." },
-                { role: 'user', text: "Yes sir, I will measure everything.", si: "ඔව් සර්, මම ඔක්කොම මනින්නම්.", hint: "I will measure everything" }
+                { role: 'bot', text: "Nuwan, please look at this plan.", pronounce: "නුවන්, ප්ලීස් ලුක් ඇට් දිස් ප්ලෑන්.", si: "නුවන්, කරුණාකරලා මේ ප්ලෑන් එක බලන්න." },
+                { role: 'user', text: "What size bars do we need?", pronounce: "වොට් සයිස් බාර්ස් ඩූ වී නීඩ්?", si: "අපිට මොන සයිස් කම්බි ද ඕනා?" },
+                { role: 'bot', text: "We need T16 bars for the main steel.", pronounce: "වී නීඩ් ටී-සික්ස්ටීන් බාර්ස් ෆෝ ද මේන් ස්ටීල්.", si: "ප්‍රධාන එකට අපිට T16 (16 කම්බි) ඕනා." },
+                { role: 'user', text: "And what about the links?", pronounce: "ඇන්ඩ් වොට් අබවුට් ද ලින්ක්ස්?", si: "එතකොට මුදු (ලින්ක්ස්) ගැන මොකද?" },
+                { role: 'bot', text: "Use T10 bars every 200 millimeters.", pronounce: "යූස් ටී-ටෙන් බාර්ස් එව්රි ටූ හන්ඩ්‍රඩ් මිලිමීටර්ස්.", si: "මිලිමීටර් 200න් 200ට T10 කම්බි පාවිච්චි කරන්න." },
+                { role: 'user', text: "Do we have enough tying wire?", pronounce: "ඩූ වී හෑව් ඉනෆ් ටයි-ඉන් වයර්?", si: "අපිට බඳින කම්බි ඇති වෙන්න තියෙනවද?" },
+                { role: 'bot', text: "You can get a coil from the store.", pronounce: "යූ කැන් ගෙට් අ කොයිල් ෆ්‍රොම් ද ස්ටෝ.", si: "ඔයාට ස්ටෝරුවෙන් රෝලක් ගන්න පුළුවන්." },
+                { role: 'user', text: "I will get it now. Do we need spacers?", pronounce: "අයි විල් ගෙට් ඉට් නව්. ඩූ වී නීඩ් ස්පේසර්ස්?", si: "මම දැන් ඒක ගේන්නම්. අපිට කවර් බ්ලොක්ස් ඕනද?" },
+                { role: 'bot', text: "Yes, use the 40 millimeter spacers.", pronounce: "යෙස්, යූස් ද ෆෝර්ටි මිලිමීටර් ස්පේසර්ස්.", si: "ඔව්, මිලිමීටර් 40 ස්පේසර්ස් පාවිච්චි කරන්න." },
+                { role: 'user', text: "Understood sir. I will start the work.", pronounce: "අන්ඩර්ස්ටුඩ් සර්. අයි විල් ස්ටාට් ද වර්ක්.", si: "තේරුනා සර්. මම වැඩේ පටන් ගන්නම්." }
             ]
         },
 
-        // --- 4. WELDING TASK (12 Steps) ---
+        // --- 4. WELDING JOB ---
         {
-            id: 4, title: "4. Welding Job", icon: "🔥", desc: "Technical welding instructions.",
+            id: 4, title: "4. Welding", icon: "🔥", desc: "Safety and instructions.",
             dialogue: [
-                { role: 'bot', text: "Nuwan, bring your welding gear here.", si: "නුවන්, වෑල්ඩින් බඩු ටික මෙහෙට ගේන්න." },
-                { role: 'user', text: "I am ready sir. What is the job?", si: "මම ලෑස්තියි සර්. මොකක්ද වැඩේ?", hint: "What is the job" },
-                { role: 'bot', text: "We need to weld this bracket to the beam.", si: "අපිට මේ බ්‍රැකට් එක බීම් එකට පාස්සන්න ඕනා." },
-                { role: 'user', text: "Okay. Do you want a Fillet or Butt weld?", si: "හරි. ෆිලට් වෙල්ඩ් එකක්ද බට් වෙල්ඩ් එකක්ද ඕනා?", hint: "Fillet or Butt weld" },
-                { role: 'bot', text: "A heavy fillet weld all around.", si: "වටේටම හොඳ ඝනකම ෆිලට් වෙල්ඩ් එකක්." },
-                { role: 'user', text: "Understood. I will grind the surface first.", si: "තේරුනා. මම මතුපිට ග්‍රයින්ඩ් කරගන්නම් ඉස්සෙල්ලා.", hint: "Grind the surface first" },
-                { role: 'bot', text: "Make sure to set up the safety screen.", si: "සේෆ්ටි ස්ක්‍රීන් එක (ආවරණය) දාගන්න බලාගන්න." },
-                { role: 'user', text: "Yes, I will protect others from the arc.", si: "ඔව්, මම අනිත් අයව ආක් එකෙන් පරිස්සම් කරන්නම්.", hint: "Protect others" },
-                { role: 'bot', text: "How long will it take?", si: "කොච්චර වෙලා යයිද?" },
-                { role: 'user', text: "Maybe 20 minutes to finish.", si: "විනාඩි 20ක් විතර යයි ඉවර කරන්න.", hint: "20 minutes to finish" },
-                { role: 'bot', text: "Good. Let me know when done.", si: "හොඳයි. ඉවර වුනාම කියන්න." },
-                { role: 'user', text: "Will do sir.", si: "අනිවාර්යයෙන්ම සර්.", hint: "Will do sir" },
-                { role: 'bot', text: "Is the machine set to correct amps?", si: "මැෂින් එකේ ඇම්පියර් ගාන හරිද?" },
-                { role: 'user', text: "Yes, I set it to 120 amps.", si: "ඔව්, මම ඒක 120ට දැම්මා.", hint: "Set to 120 amps" }
+                { role: 'bot', text: "Nuwan, bring the welding machine here.", pronounce: "නුවන්, බ්‍රින්ග් ද වෙල්ඩින් මැෂින් හියර්.", si: "නුවන්, වෑල්ඩින් මැෂින් එක මෙහෙට ගේන්න." },
+                { role: 'user', text: "I am ready. What is the job?", pronounce: "අයි ඈම් රෙඩි. වොට් ඊස් ද ජොබ්?", si: "මම ලෑස්තියි. මොකක්ද වැඩේ?" },
+                { role: 'bot', text: "We need to weld this bracket to the beam.", pronounce: "වී නීඩ් ටු වෙල්ඩ් දිස් බ්‍රැකට් ටු ද බීම්.", si: "අපිට මේ බ්‍රැකට් එක බීම් එකට පාස්සන්න ඕනා." },
+                { role: 'user', text: "Do you want a full weld all around?", pronounce: "ඩූ යූ වෝන්ට් අ ෆුල් වෙල්ඩ් ඕල් අරවුන්ඩ්?", si: "ඔයාට වටේටම ෆුල් වෙල්ඩ් එකක් ඕනද?" },
+                { role: 'bot', text: "Yes, make it strong.", pronounce: "යෙස්, මේක් ඉට් ස්ට්‍රෝන්ග්.", si: "ඔව්, ඒක ශක්තිමත් කරන්න." },
+                { role: 'user', text: "I will clean the surface first.", pronounce: "අයි විල් ක්ලීන් ද සර්ෆස් ෆස්ට්.", si: "මම ඉස්සෙල්ලා මතුපිට පිරිසිදු කරන්නම්." },
+                { role: 'bot', text: "Please use the safety screen.", pronounce: "ප්ලීස් යූස් ද සේෆ්ටි ස්ක්‍රීන්.", si: "කරුණාකරලා ආරක්ෂිත ආවරණය (Screen) පාවිච්චි කරන්න." },
+                { role: 'user', text: "Yes, I will protect the other workers.", pronounce: "යෙස්, අයි විල් ප්‍රොටෙක්ට් ද අදර් වර්කර්ස්.", si: "ඔව්, මම අනිත් සේවකයන්ව ආරක්ෂා කරන්නම්." },
+                { role: 'bot', text: "How long will it take?", pronounce: "හව් ලෝන්ග් විල් ඉට් ටේක්?", si: "කොච්චර වෙලාවක් යයිද?" },
+                { role: 'user', text: "It will take about 20 minutes.", pronounce: "ඉට් විල් ටේක් අබවුට් ට්වෙන්ටි මිනිට්ස්.", si: "විනාඩි 20ක් විතර යයි." }
             ]
         },
 
-        // --- 5. CONCRETE POUR (12 Steps) ---
+        // --- 5. CONCRETE POUR ---
         {
-            id: 5, title: "5. Concrete Pour", icon: "🚛", desc: "Pouring, vibrating and leveling.",
+            id: 5, title: "5. Concrete Pour", icon: "🚛", desc: "Teamwork with concrete.",
             dialogue: [
-                { role: 'bot', text: "The concrete truck is arriving now.", si: "කොන්ක්‍රීට් ට්‍රක් එක දැන් එනවා." },
-                { role: 'user', text: "Okay, the shuttering is ready.", si: "හරි, ෂටරින් (ලෑලි ගැසීම) ලෑස්තියි.", hint: "Shuttering is ready" },
-                { role: 'bot', text: "Who is on the vibrator?", si: "කවුද වයිබ්‍රේටරේ අල්ලන්නේ?" },
-                { role: 'user', text: "I can do the vibrating sir.", si: "මට වයිබ්‍රේට් කරන්න පුළුවන් සර්.", hint: "I can do vibrating" },
-                { role: 'bot', text: "Make sure there are no air bubbles.", si: "හුළං බුබුළු නැති වෙන්න වග බලාගන්න." },
-                { role: 'user', text: "I will vibrate it well, don't worry.", si: "මම හොඳට වයිබ්‍රේට් කරන්නම්, බය වෙන්න එපා.", hint: "I will vibrate it well" },
-                { role: 'bot', text: "We need to level it quickly.", si: "අපිට ඉක්මනට ලෙවල් කරන්න වෙනවා." },
-                { role: 'user', text: "Pass me the long straight edge.", si: "මට අර දිග ලෑල්ල දෙන්න.", hint: "Pass the straight edge" },
-                { role: 'bot', text: "Here. Keep it smooth.", si: "මෙන්න. සිනිඳුවට තියාගන්න." },
-                { role: 'user', text: "I will use the trowel for finishing.", si: "මම ෆිනිෂ් කරන්න මේලන් එක පාවිච්චි කරන්නම්.", hint: "Use trowel for finishing" },
-                { role: 'bot', text: "Good work. Clean the tools after.", si: "හොඳ වැඩක්. පස්සේ බඩු ටික හෝදන්න." },
-                { role: 'user', text: "Yes, I will wash everything.", si: "ඔව්, මම ඔක්කොම හෝදන්නම්.", hint: "I will wash everything" },
-                { role: 'bot', text: "Don't let the concrete harden on tools.", si: "බඩු වල කොන්ක්‍රීට් වේලෙන්න දෙන්න එපා." },
-                { role: 'user', text: "I am washing them right now.", si: "මම මේ දැන් ඒවා හෝදනවා.", hint: "Washing them right now" }
+                { role: 'bot', text: "The concrete truck is here. Let's go!", pronounce: "ද කොන්ක්‍රීට් ට්‍රක් ඊස් හියර්. ලෙට්ස් ගෝ!", si: "කොන්ක්‍රීට් ට්‍රක් එක ආවා. යමු!" },
+                { role: 'user', text: "I will use the vibrator, sir.", pronounce: "අයි විල් යූස් ද වයිබ්‍රේටර්, සර්.", si: "මම වයිබ්‍රේටරේ පාවිච්චි කරන්නම් සර්." },
+                { role: 'bot', text: "Good. Make sure there are no air bubbles.", pronounce: "ගුඩ්. මේක් ෂුවර් දෙයා ආ නෝ එයා බබල්ස්.", si: "හොඳයි. හුළං බුබුළු නැති වෙන්න වග බලාගන්න." },
+                { role: 'user', text: "Is the concrete too wet?", pronounce: "ඊස් ද කොන්ක්‍රීට් ටූ වෙට්?", si: "කොන්ක්‍රීට් එක වතුර වැඩියි වගේද?" },
+                { role: 'bot', text: "It is okay. Just level it quickly.", pronounce: "ඉට් ඊස් ඕකේ. ජස්ට් ලෙවල් ඉට් ක්වික්ලි.", si: "ඒක ප්‍රශ්නයක් නෑ. නිකන් ඉක්මනට ලෙවල් කරන්න." },
+                { role: 'user', text: "Please pass me the shovel.", pronounce: "ප්ලීස් පාස් මී ද ෂවල්.", si: "කරුණාකරලා මට සවල දෙන්න." },
+                { role: 'bot', text: "Here you go. Be careful of the mud.", pronounce: "හියර් යූ ගෝ. බී කෙයාෆුල් ඔෆ් ද මඩ්.", si: "මෙන්න ගන්න. මඩ ගැන පරිස්සම් වෙන්න." },
+                { role: 'user', text: "I will clean my boots later.", pronounce: "අයි විල් ක්ලීන් මයි බූට්ස් ලේටර්.", si: "මම පස්සේ මගේ බූට්ස් හෝදගන්නම්." }
             ]
         },
 
-        // --- 6. FIXING A MISTAKE (12 Steps) ---
+        // --- 6. FIXING A MISTAKE ---
         {
-            id: 6, title: "6. Making a Mistake", icon: "⚠️", desc: "Apologizing and correcting an error.",
+            id: 6, title: "6. Making a Mistake", icon: "⚠️", desc: "Apologizing correctly.",
             dialogue: [
-                { role: 'bot', text: "Nuwan, wait! This measurement is wrong.", si: "නුවන් ඉන්න! මේ මිනුම වැරදියි." },
-                { role: 'user', text: "Oh? Let me check my tape measure.", si: "ආ? මම මගේ ටේප් එක බලන්නම්.", hint: "Let me check" },
-                { role: 'bot', text: "It is 100mm too short.", si: "මේක මිලිමීටර් 100ක් කොටයි." },
-                { role: 'user', text: "Sorry sir. I made a mistake.", si: "සොරි සර්. මගේ අතින් වැරදීමක් වුනේ.", hint: "Sorry sir I made a mistake" },
-                { role: 'bot', text: "We cannot use this piece now.", si: "අපිට දැන් මේ කෑල්ල පාවිච්චි කරන්න බෑ." },
-                { role: 'user', text: "I will cut a new piece immediately.", si: "මම ඉක්මනට අලුත් කෑල්ලක් කපන්නම්.", hint: "Cut a new piece" },
-                { role: 'bot', text: "Be careful next time. Steel is expensive.", si: "ඊළඟ පාර පරිස්සම් වෙන්න. යකඩ ගණන් වැඩියි." },
-                { role: 'user', text: "It won't happen again. I promise.", si: "ආයේ එහෙම වෙන්නේ නෑ. මම පොරොන්දු වෙනවා.", hint: "It will not happen again" },
-                { role: 'bot', text: "Okay, fix it quickly.", si: "හරි, ඉක්මනට හදන්න." },
-                { role: 'user', text: "Thank you for understanding.", si: "තේරුම් ගත්තාට ස්තූතියි.", hint: "Thank you" },
-                { role: 'bot', text: "Show me when you finish.", si: "ඉවර වුනාම මට පෙන්නන්න." },
-                { role: 'user', text: "I will call you when I am done.", si: "මම ඉවර වෙලා කතා කරන්නම්.", hint: "Call you when done" }
+                { role: 'bot', text: "Wait! This measurement is wrong.", pronounce: "වෙයිට්! දිස් මෙෂමන්ට් ඊස් රෝන්ග්.", si: "පොඩ්ඩක් ඉන්න! මේ මිනුම වැරදියි." },
+                { role: 'user', text: "Really? Let me check the tape measure.", pronounce: "රියලි? ලෙට් මී චෙක් ද ටේප් මෙෂර්.", si: "ඇත්තටම? මම ටේප් එකෙන් බලන්නම්." },
+                { role: 'bot', text: "It is 100 millimeters too short.", pronounce: "ඉට් ඊස් වන් හන්ඩ්‍රඩ් මිලිමීටර්ස් ටූ ෂෝට්.", si: "මේක මිලිමීටර් 100ක් කොටයි." },
+                { role: 'user', text: "I am sorry sir. It is my mistake.", pronounce: "අයි ඈම් සොරි සර්. ඉට් ඊස් මයි මිස්ටේක්.", si: "මට සමාවෙන්න සර්. ඒක මගේ වැරැද්ද." },
+                { role: 'bot', text: "We cannot use this piece now.", pronounce: "වී කැනොට් යූස් දිස් පීස් නව්.", si: "අපිට දැන් මේ කෑල්ල පාවිච්චි කරන්න බෑ." },
+                { role: 'user', text: "I will cut a new piece immediately.", pronounce: "අයි විල් කට් අ නිව් පීස් ඉමීඩියට්ලි.", si: "මම දැන්ම අලුත් කෑල්ලක් කපන්නම්." },
+                { role: 'bot', text: "Please double check next time.", pronounce: "ප්ලීස් ඩබල් චෙක් නෙක්ස්ට් ටයිම්.", si: "කරුණාකරලා ඊළඟ පාර දෙපාරක් බලන්න." },
+                { role: 'user', text: "It will not happen again.", pronounce: "ඉට් විල් නොට් හැපන් අගේන්.", si: "ආයේ එහෙම වෙන්නේ නෑ." }
             ]
         },
 
-        // --- 7. MACHINE BREAKDOWN (12 Steps) ---
+        // --- 7. MACHINE BREAKDOWN ---
         {
-            id: 7, title: "7. Tool Breakdown", icon: "⚙️", desc: "Reporting a broken machine.",
+            id: 7, title: "7. Tool Breakdown", icon: "⚙️", desc: "Reporting a problem.",
             dialogue: [
-                { role: 'bot', text: "Why have you stopped working?", si: "ඇයි වැඩේ නැවැත්තුවේ?" },
-                { role: 'user', text: "Sir, the grinder is not working.", si: "සර්, ග්‍රයින්ඩරේ වැඩ කරන්නේ නෑ.", hint: "Grinder is not working" },
-                { role: 'bot', text: "Is it plugged in correctly?", si: "ප්ලග් එක හරියට ගහලද?" },
-                { role: 'user', text: "Yes, I checked the plug and fuse.", si: "ඔව්, මම ප්ලග් එකයි ෆියුස් එකයි බැලුවා.", hint: "Checked plug and fuse" },
-                { role: 'bot', text: "Maybe the cable is cut?", si: "සමහර විට වයර් එක කැපිලද?" },
-                { role: 'user', text: "No, the cable looks fine. It smells burnt.", si: "නෑ, වයර් එක හොඳයි. පිච්චුනු ගඳක් එනවා.", hint: "It smells burnt" },
-                { role: 'bot', text: "Okay, do not use it. It is dangerous.", si: "හරි, පාවිච්චි කරන්න එපා. ඒක අනතුරුදායකයි." },
-                { role: 'user', text: "I will tag it as 'Broken'.", si: "මම ඒකේ 'කැඩිලා' කියලා බෝඩ් එකක් ගහන්නම්.", hint: "Tag it as Broken" },
-                { role: 'bot', text: "Go get a spare one from the store.", si: "ස්ටෝරුවෙන් වෙන එකක් ගේන්න." },
-                { role: 'user', text: "Okay, I am going now.", si: "හරි, මම දැන් යනවා.", hint: "Going now" },
-                { role: 'bot', text: "Tell the storeman what happened.", si: "ස්ටෝරුවේ කෙනාට කියන්න මොකද වුනේ කියලා." },
-                { role: 'user', text: "Yes, I will explain the problem.", si: "ඔව්, මම විස්තර කරන්නම්.", hint: "Explain the problem" }
+                { role: 'bot', text: "Why have you stopped working?", pronounce: "වයි හෑව් යූ ස්ටොප්ඩ් වර්කින්?", si: "ඇයි ඔයා වැඩේ නැවැත්තුවේ?" },
+                { role: 'user', text: "The grinder is not working, sir.", pronounce: "ද ග්‍රයින්ඩර් ඊස් නොට් වර්කින්, සර්.", si: "ග්‍රයින්ඩරේ වැඩ කරන්නේ නෑ සර්." },
+                { role: 'bot', text: "Did you check the power plug?", pronounce: "ඩිඩ් යූ චෙක් ද පවර් ප්ලග්?", si: "ඔයා ප්ලග් එක බැලුවද?" },
+                { role: 'user', text: "Yes, the fuse is fine. I think the motor is broken.", pronounce: "යෙස්, ද ෆියුස් ඊස් ෆයින්. අයි තින්ක් ද මෝටර් ඊස් බ්‍රෝකන්.", si: "ඔව්, ෆියුස් එක හොඳයි. මම හිතන්නේ මෝටරේ කැඩිලා." },
+                { role: 'bot', text: "Okay, please take it to the store room.", pronounce: "ඕකේ, ප්ලීස් ටේක් ඉට් ටු ද ස්ටෝ රූම්.", si: "හරි, කරුණාකරලා ඒක ස්ටෝ රූම් එකට ගෙනියන්න." },
+                { role: 'user', text: "I will go and get a spare one.", pronounce: "අයි විල් ගෝ ඇන්ඩ් ගෙට් අ ස්පෙයා වන්.", si: "මම ගිහින් වෙන එකක් (Spare) ගේන්නම්." }
             ]
         },
 
-        // --- 8. END OF DAY (12 Steps) ---
+        // --- 8. END OF DAY ---
         {
-            id: 8, title: "8. End of Shift", icon: "🌅", desc: "Cleaning up and timesheets.",
+            id: 8, title: "8. End of Shift", icon: "🌅", desc: "Finishing work correctly.",
             dialogue: [
-                { role: 'bot', text: "Alright lads, pack up. Time to go.", si: "හරි කොල්ලනේ, බඩු අස්කරගන්න. යන්න වෙලාව හරි." },
-                { role: 'user', text: "Okay sir. I am cleaning my area.", si: "හරි සර්. මම මගේ ඒරියා එක සුද්ද කරනවා.", hint: "Cleaning my area" },
-                { role: 'bot', text: "Did you put the tools back?", si: "ටූල්ස් ටික ආයේ තිබ්බද?" },
-                { role: 'user', text: "Yes, everything is in the box.", si: "ඔව්, ඔක්කොම පෙට්ටිය ඇතුලේ.", hint: "Everything in the box" },
-                { role: 'bot', text: "Don't forget to sign the timesheet.", si: "ටයිම්-ෂීට් එක අත්සන් කරන්න අමතක කරන්න එපා." },
-                { role: 'user', text: "I signed it just now.", si: "මම දැන් අත්සන් කළා.", hint: "Signed it just now" },
-                { role: 'bot', text: "Good job today Nuwan.", si: "අද හොඳට වැඩ කළා නුවන්." },
-                { role: 'user', text: "Thanks sir. See you tomorrow.", si: "තැන්ක්ස් සර්. හෙට හම්බෙමු.", hint: "See you tomorrow" },
-                { role: 'bot', text: "Have a good evening.", si: "සුභ සැන්දෑවක්." },
-                { role: 'user', text: "You too. Bye.", si: "ඔබටත් එසේමයි. බායි.", hint: "You too bye" },
-                { role: 'bot', text: "Are you walking or taking the bus?", si: "ඔයා පයින්ද යන්නේ බස් එකේද?" },
-                { role: 'user', text: "I am taking the bus home.", si: "මම බස් එකේ යන්නේ.", hint: "Taking the bus" }
+                { role: 'bot', text: "Alright everyone, time to finish.", pronounce: "ඕල්රයිට් එව්රිවන්, ටයිම් ටු ෆිනිෂ්.", si: "හරි හැමෝම, දැන් වැඩ ඉවර කරන වෙලාව." },
+                { role: 'user', text: "I put all the tools in the box.", pronounce: "අයි පුට් ඕල් ද ටූල්ස් ඉන් ද බොක්ස්.", si: "මම බඩු ඔක්කොම පෙට්ටියට දැම්මා." },
+                { role: 'bot', text: "Did you sign the timesheet?", pronounce: "ඩිඩ් යූ සයින් ද ටයිම්-ෂීට්?", si: "ඔයා ටයිම්-ෂීට් එක අත්සන් කළාද?" },
+                { role: 'user', text: "I am signing it right now.", pronounce: "අයි ඈම් සයිනින් ඉට් රයිට් නව්.", si: "මම මේ දැන් අත්සන් කරනවා." },
+                { role: 'bot', text: "Good job today. Get home safely.", pronounce: "ගුඩ් ජොබ් ටුඩේ. ගෙට් හෝම් සේෆ්ලි.", si: "අද හොඳට වැඩ කළා. පරිස්සමෙන් ගෙදර යන්න." },
+                { role: 'user', text: "See you tomorrow, sir. Goodbye.", pronounce: "සී යූ ටුමෝරෝ, සර්. ගුඩ්බායි.", si: "හෙට හම්බෙමු සර්. ගුඩ්බායි." }
             ]
         },
 
-        // --- 9. AT THE SUPERMARKET (10 Steps) ---
+        // --- 9. SHOPPING ---
         {
-            id: 9, title: "9. Supermarket", icon: "🛒", desc: "Buying food and paying.",
+            id: 9, title: "9. At the Shop", icon: "🛒", desc: "Simple transaction.",
             dialogue: [
-                { role: 'bot', text: "Hello there. Do you need a bag?", si: "හෙලෝ. ඔයාට බෑග් එකක් ඕනද?" },
-                { role: 'user', text: "No thanks. I have my own bag.", si: "එපා ස්තූතියි. මං ළඟ බෑග් එකක් තියෙනවා.", hint: "I have my own bag" },
-                { role: 'bot', text: "Okay. Do you have a loyalty card?", si: "හරි. ඔයා ළඟ ලෝයල්ටි කාඩ් (වට්ටම් කාඩ්) එකක් තියෙනවද?" },
-                { role: 'user', text: "No, I don't have one.", si: "නෑ, මං ළඟ නෑ.", hint: "I do not have one" },
-                { role: 'bot', text: "That will be 15 Euros and 50 cents.", si: "ඔක්කොම 15.50 යි." },
-                { role: 'user', text: "Can I pay by card?", si: "කාඩ් එකෙන් ගෙවන්න පුළුවන්ද?", hint: "Pay by card" },
-                { role: 'bot', text: "Yes, tap your card here please.", si: "ඔව්, මෙතනින් කාඩ් එක ටැප් කරන්න." },
-                { role: 'user', text: "Okay... is it done?", si: "හරි... හරි ගියාද?", hint: "Is it done" },
-                { role: 'bot', text: "Yes, approved. Would you like a receipt?", si: "ඔව්, හරි ගියා. බිල් එක ඕනද?" },
-                { role: 'user', text: "No thanks. Have a nice day.", si: "එපා ස්තූතියි. සුභ දවසක්.", hint: "Have a nice day" }
+                { role: 'bot', text: "Hello. Do you need a bag?", pronounce: "හෙලෝ. ඩූ යූ නීඩ් අ බෑග්?", si: "හෙලෝ. ඔයාට බෑග් එකක් ඕනද?" },
+                { role: 'user', text: "No thank you, I have my own bag.", pronounce: "නෝ තැන්ක් යූ, අයි හෑව් මයි ඕන් බෑග්.", si: "එපා ස්තූතියි, මං ගාව බෑග් එකක් තියෙනවා." },
+                { role: 'bot', text: "Okay. That is 15 Euros please.", pronounce: "ඕකේ. දැට් ඊස් ෆිෆ්ටීන් යූරෝස් ප්ලීස්.", si: "හරි. යුරෝ 15ක් දෙන්න." },
+                { role: 'user', text: "Can I pay by card?", pronounce: "කැන් අයි පේ බයි කාඩ්?", si: "කාඩ් එකෙන් ගෙවන්න පුළුවන්ද?" },
+                { role: 'bot', text: "Yes, please tap your card here.", pronounce: "යෙස්, ප්ලීස් ටැප් යො කාඩ් හියර්.", si: "ඔව්, මෙතනින් කාඩ් එක තියන්න (Tap)." },
+                { role: 'user', text: "Thank you. Have a nice day.", pronounce: "තැන්ක් යූ. හෑව් අ නයිස් ඩේ.", si: "ස්තූතියි. සුභ දවසක්." }
             ]
         },
 
-        // --- 10. PUBLIC TRANSPORT (10 Steps) ---
+        // --- 10. THE BUS ---
         {
-            id: 10, title: "10. Taking the Bus", icon: "🚌", desc: "Asking the driver & paying.",
+            id: 10, title: "10. Taking the Bus", icon: "🚌", desc: "Asking for a ticket.",
             dialogue: [
-                { role: 'bot', text: "(Bus stops) Hello.", si: "(බස් එක නවතී) හෙලෝ." },
-                { role: 'user', text: "Hello. Does this bus go to City Center?", si: "හෙලෝ. මේ බස් එක සිටි සෙන්ටර් යනවද?", hint: "Go to City Center" },
-                { role: 'bot', text: "Yes it does. Hop on.", si: "ඔව් යනවා. නගින්න." },
-                { role: 'user', text: "How much is the fare?", si: "ගාණ කීයද?", hint: "How much is the fare" },
-                { role: 'bot', text: "It is 2 Euros 60 cents.", si: "යුරෝ 2.60 යි." },
-                { role: 'user', text: "Do you take cash?", si: "අතේ සල්ලි ගන්නවද?", hint: "Do you take cash" },
-                { role: 'bot', text: "Coins only, no notes.", si: "කාසි විතරයි, නෝට්ටු බෑ." },
-                { role: 'user', text: "Okay, here is 3 Euros in coins.", si: "හරි, මෙන්න යුරෝ 3ක කාසි.", hint: "Here is 3 Euros" },
-                { role: 'bot', text: "Here is your ticket and change.", si: "මෙන්න ටිකට් එකයි ඉතුරු සල්ලියි." },
-                { role: 'user', text: "Thank you driver.", si: "ස්තූතියි ඩ්‍රයිවර්.", hint: "Thank you driver" }
+                { role: 'bot', text: "Hello.", pronounce: "හෙලෝ.", si: "හෙලෝ." },
+                { role: 'user', text: "Does this bus go to the City Center?", pronounce: "ඩස් දිස් බස් ගෝ ටු ද සිටි සෙන්ටර්?", si: "මේ බස් එක සිටි සෙන්ටර් (නගර මධ්‍යයට) යනවද?" },
+                { role: 'bot', text: "Yes it does.", pronounce: "යෙස් ඉට් ඩස්.", si: "ඔව් යනවා." },
+                { role: 'user', text: "How much is the ticket?", pronounce: "හව් මච් ඊස් ද ටිකට්?", si: "ටිකට් එක කීයද?" },
+                { role: 'bot', text: "It is 2 Euros and 60 cents.", pronounce: "ඉට් ඊස් ටූ යූරෝස් ඇන්ඩ් සික්ස්ටි සෙන්ට්ස්.", si: "යුරෝ 2යි සත 60යි." },
+                { role: 'user', text: "Here is 3 Euros.", pronounce: "හියර් ඊස් ත්‍රී යූරෝස්.", si: "මෙන්න යුරෝ 3ක්." },
+                { role: 'bot', text: "Here is your ticket and change.", pronounce: "හියර් ඊස් යො ටිකට් ඇන්ඩ් චේන්ජ්.", si: "මෙන්න ඔයාගේ ටිකට් එකයි ඉතුරු සල්ලියි." },
+                { role: 'user', text: "Thank you driver.", pronounce: "තැන්ක් යූ ඩ්‍රයිවර්.", si: "ස්තූතියි ඩ්‍රයිවර්." }
             ]
         },
 
-        // --- 11. OPENING BANK ACCOUNT (12 Steps) ---
+        // --- 11. BANK ---
         {
             id: 11, title: "11. At the Bank", icon: "🏦", desc: "Opening an account.",
             dialogue: [
-                { role: 'bot', text: "Good morning. How can I help?", si: "සුභ උදෑසනක්. මම කොහොමද උදව් කරන්නේ?" },
-                { role: 'user', text: "I want to open a current account.", si: "මට ජංගම ගිණුමක් අරින්න ඕනා.", hint: "Open current account" },
-                { role: 'bot', text: "Do you have your passport and PPS number?", si: "ඔයාගේ පාස්පෝට් එකයි PPS නම්බර් එකයි තියෙනවද?" },
-                { role: 'user', text: "Yes, I have both documents.", si: "ඔව්, මං ළඟ දෙකම තියෙනවා.", hint: "I have both documents" },
-                { role: 'bot', text: "Do you have proof of address?", si: "ලිපිනය තහවුරු කරන්න දෙයක් තියෙනවද?" },
-                { role: 'user', text: "I have a letter from my employer.", si: "මගේ බොස්ගෙන් ලියුමක් තියෙනවා.", hint: "Letter from employer" },
-                { role: 'bot', text: "Perfect. Please fill out this form.", si: "නියමයි. මේ ෆෝම් එක පුරවන්න." },
-                { role: 'user', text: "Can you help me with this question?", si: "මට මේ ප්‍රශ්නෙට උදව් කරනවද?", hint: "Help me with this" },
-                { role: 'bot', text: "Sure. Just sign your name there.", si: "ඔතන නම අත්සන් කරන්න." },
-                { role: 'user', text: "Okay, thank you very much.", si: "හරි, බොහොම ස්තූතියි.", hint: "Thank you very much" },
-                { role: 'bot', text: "Your card will arrive by post.", si: "ඔයාගේ කාඩ් එක තැපෑලෙන් එයි." },
-                { role: 'user', text: "How many days will it take?", si: "දවස් කීයක් යයිද?", hint: "How many days" }
+                { role: 'bot', text: "Hello, how can I help you?", pronounce: "හෙලෝ, හව් කැන් අයි හෙල්ප් යූ?", si: "හෙලෝ, මම කොහොමද උදව් කරන්නේ?" },
+                { role: 'user', text: "I want to open a bank account.", pronounce: "අයි වෝන්ට් ටු ඕපන් අ බෑන්ක් එකවුන්ට්.", si: "මට බැංකු ගිණුමක් අරින්න ඕනා." },
+                { role: 'bot', text: "Do you have your Passport and PPS number?", pronounce: "ඩූ යූ හෑව් යො පාස්පෝට් ඇන්ඩ් පී.පී.එස් නම්බර්?", si: "ඔයා ගාව පාස්පෝට් එකයි PPS නම්බර් එකයි තියෙනවද?" },
+                { role: 'user', text: "Yes, I have the documents here.", pronounce: "යෙස්, අයි හෑව් ද ඩොකියුමන්ට්ස් හියර්.", si: "ඔව්, මං ගාව ලියකියවිලි මෙතන තියෙනවා." },
+                { role: 'bot', text: "Do you have proof of your address?", pronounce: "ඩූ යූ හෑව් පෲෆ් ඔෆ් යො ඇඩ්‍රස්?", si: "ලිපිනය තහවුරු කරන්න දෙයක් තියෙනවද?" },
+                { role: 'user', text: "I have a letter from my employer.", pronounce: "අයි හෑව් අ ලෙටර් ෆ්‍රොම් මයි එම්ප්ලෝයර්.", si: "මගේ බොස්ගෙන් (සේවායෝජකයාගෙන්) ලියුමක් තියෙනවා." },
+                { role: 'bot', text: "Perfect. Please fill out this form.", pronounce: "පර්ෆෙක්ට්. ප්ලීස් ෆිල් අවුට් දිස් ෆෝම්.", si: "නියමයි. කරුණාකරලා මේ ෆෝම් එක පුරවන්න." }
             ]
         },
 
-        // --- 12. DOCTOR VISIT (10 Steps) ---
+        // --- 12. DOCTOR ---
         {
-            id: 12, title: "12. The Doctor", icon: "👨‍⚕️", desc: "Back pain issue.",
+            id: 12, title: "12. The Doctor", icon: "👨‍⚕️", desc: "Explaining pain clearly.",
             dialogue: [
-                { role: 'bot', text: "Come in. What seems to be the problem?", si: "ඇතුලට එන්න. මොකක්ද ප්‍රශ්නය?" },
-                { role: 'user', text: "Doctor, I have a bad back pain.", si: "දොස්තර, මගේ කොන්දේ තද වේදනාවක් තියෙනවා.", hint: "Bad back pain" },
-                { role: 'bot', text: "Where exactly does it hurt?", si: "හරියටම කොතනද රිදෙන්නේ?" },
-                { role: 'user', text: "Right here, in the lower back.", si: "මෙන්න මෙතන, කොන්දේ පහළ.", hint: "Lower back" },
-                { role: 'bot', text: "Did you lift something heavy at work?", si: "වැඩබිමේදී බරක් ඉස්සුවද?" },
-                { role: 'user', text: "Yes, a bag of cement yesterday.", si: "ඔව්, ඊයේ සිමෙන්ති කොට්ටයක්.", hint: "Bag of cement" },
-                { role: 'bot', text: "Take these tablets and rest for 2 days.", si: "මේ පෙති බීලා දවස් 2ක් විවේක ගන්න." },
-                { role: 'user', text: "Can I get a medical certificate for work?", si: "මට වැඩට පෙන්නන්න මෙඩිකල් සහතිකයක් දෙනවද?", hint: "Medical certificate" },
-                { role: 'bot', text: "Yes, I will write one for you.", si: "ඔව්, මම ලියලා දෙන්නම්." },
-                { role: 'user', text: "Thank you doctor.", si: "ස්තූතියි දොස්තර.", hint: "Thank you doctor" }
+                { role: 'bot', text: "Come in. What is the problem?", pronounce: "කම් ඉන්. වොට් ඊස් ද ප්‍රොබ්ලම්?", si: "ඇතුලට එන්න. මොකක්ද ප්‍රශ්නය?" },
+                { role: 'user', text: "Doctor, I have a bad back pain.", pronounce: "ඩොක්ටර්, අයි හෑව් අ බෑඩ් බැක් පේන්.", si: "දොස්තර, මගේ කොන්දේ තද වේදනාවක් තියෙනවා." },
+                { role: 'bot', text: "Did you lift something heavy?", pronounce: "ඩිඩ් යූ ලිෆ්ට් සම්තින් හෙවි?", si: "ඔයා මොනවා හරි බර දෙයක් ඉස්සුවද?" },
+                { role: 'user', text: "Yes, I lifted heavy cement bags.", pronounce: "යෙස්, අයි ලිෆ්ටඩ් හෙවි සිමන්ට් බෑග්ස්.", si: "ඔව්, මම බර සිමෙන්ති කොට්ට ඉස්සුවා." },
+                { role: 'bot', text: "Take this medicine and rest for 2 days.", pronounce: "ටේක් දිස් මෙඩිසින් ඇන්ඩ් රෙස්ට් ෆෝ ටූ ඩේස්.", si: "මේ බෙහෙත් අරගෙන දවස් 2ක් විවේක ගන්න." },
+                { role: 'user', text: "Can I get a medical certificate?", pronounce: "කැන් අයි ගෙට් අ මෙඩිකල් සර්ටිෆිකේට්?", si: "මට මෙඩිකල් සහතිකයක් ගන්න පුළුවන්ද?" }
             ]
         },
 
-        // --- 13. CALLING IN SICK (10 Steps) ---
+        // --- 13. CALLING IN SICK ---
         {
-            id: 13, title: "13. Calling Sir (Sick)", icon: "🤒", desc: "Phone call for sick leave.",
+            id: 13, title: "13. Calling Sick", icon: "🤒", desc: "Calling the boss.",
             dialogue: [
-                { role: 'bot', text: "(Phone rings) Liam speaking.", si: "(ෆෝන් එක වදී) ලියම් කතා කරනවා." },
-                { role: 'user', text: "Hello sir. This is Nuwan.", si: "හෙලෝ සර්. මේ නුවන්.", hint: "This is Nuwan" },
-                { role: 'bot', text: "Oh hi Nuwan. Everything okay?", si: "ආ නුවන්. හැමදේම හොඳින්ද?" },
-                { role: 'user', text: "Sorry sir, I cannot come to work today.", si: "සොරි සර්, මට අද වැඩට එන්න බෑ.", hint: "Cannot come to work" },
-                { role: 'bot', text: "Why? Are you sick?", si: "ඇයි? අසනීපද?" },
-                { role: 'user', text: "Yes, I have a fever and headache.", si: "ඔව්, මට උණ සහ ඔළුව කැක්කුම.", hint: "Fever and headache" },
-                { role: 'bot', text: "Okay. Do you need a doctor?", si: "හරි. දොස්තර කෙනෙක් ඕනද?" },
-                { role: 'user', text: "I will rest today. I hope to come tomorrow.", si: "මම අද රෙස්ට් කරනවා. හෙට එන්න බලාපොරොත්තු වෙනවා.", hint: "Hope to come tomorrow" },
-                { role: 'bot', text: "No problem. Feel better soon.", si: "ප්‍රශ්නයක් නෑ. ඉක්මනට සනීප කරගන්න." },
-                { role: 'user', text: "Thanks sir. Bye.", si: "තැන්ක්ස් සර්. බායි.", hint: "Thanks sir" }
+                { role: 'bot', text: "Hello, Liam speaking.", pronounce: "හෙලෝ, ලියම් ස්පීකින්.", si: "හෙලෝ, ලියම් කතා කරනවා." },
+                { role: 'user', text: "Good morning sir. This is Nuwan.", pronounce: "ගුඩ් මෝනින් සර්. දිස් ඊස් නුවන්.", si: "ගුඩ් මෝනින් සර්. මේ නුවන්." },
+                { role: 'bot', text: "Hi Nuwan. Is everything okay?", pronounce: "හායි නුවන්. ඊස් එව්රිතින් ඕකේ?", si: "හායි නුවන්. හැමදේම හොඳින්ද?" },
+                { role: 'user', text: "I cannot come to work today. I am sick.", pronounce: "අයි කැනොට් කම් ටු වර්ක් ටුඩේ. අයි ඈම් සික්.", si: "මට අද වැඩට එන්න බෑ. මට අසනීපයි." },
+                { role: 'bot', text: "What is wrong? Do you have the flu?", pronounce: "වොට් ඊස් රෝන්ග්? ඩූ යූ හෑව් ද ෆ්ලූ?", si: "මොකද ප්‍රශ්නේ? ඔයාට උණද?" },
+                { role: 'user', text: "Yes, I have a fever. I will see a doctor.", pronounce: "යෙස්, අයි හෑව් අ ෆීවර්. අයි විල් සී අ ඩොක්ටර්.", si: "ඔව්, මට උණ. මම දොස්තර කෙනෙක් බලන්න යනවා." },
+                { role: 'bot', text: "Okay. Hope you feel better soon.", pronounce: "ඕකේ. හෝප් යූ ෆීල් බෙටර් සූන්.", si: "හරි. ඉක්මනට සනීප වෙයි කියලා හිතනවා." },
+                { role: 'user', text: "Thank you sir.", pronounce: "තැන්ක් යූ සර්.", si: "ස්තූතියි සර්." }
             ]
         },
 
-        // --- 14. PHARMACY (10 Steps) ---
+        // --- 14. PHARMACY ---
         {
-            id: 14, title: "14. Pharmacy", icon: "💊", desc: "Buying medicine.",
+            id: 14, title: "14. Pharmacy", icon: "💊", desc: "Getting simple medicine.",
             dialogue: [
-                { role: 'bot', text: "Hello, can I help you?", si: "හෙලෝ, උදව් කරන්නද?" },
-                { role: 'user', text: "I need something for a headache.", si: "මට ඔළුව කැක්කුමට බෙහෙතක් ඕනා.", hint: "Something for headache" },
-                { role: 'bot', text: "Have you taken anything yet?", si: "ඔයා දැනට මොනවා හරි බිව්වද?" },
-                { role: 'user', text: "No, nothing yet.", si: "නෑ, තාම මොකුත් නෑ.", hint: "Nothing yet" },
-                { role: 'bot', text: "Paracetamol is best. Take two now.", si: "පැරසිටමෝල් හොඳයි. දැන් දෙකක් බොන්න." },
-                { role: 'user', text: "Do I need water?", si: "වතුර එක්කද බොන්න ඕනා?", hint: "Do I need water" },
-                { role: 'bot', text: "Yes. That is 4 Euros.", si: "ඔව්. යුරෝ 4යි." },
-                { role: 'user', text: "Here is the money.", si: "මෙන්න සල්ලි.", hint: "Here is the money" },
-                { role: 'bot', text: "Here is your receipt.", si: "මෙන්න බිල් එක." },
-                { role: 'user', text: "Thank you.", si: "ස්තූතියි.", hint: "Thank you" }
+                { role: 'bot', text: "Can I help you?", pronounce: "කැන් අයි හෙල්ප් යූ?", si: "මම උදව්වක් කරන්නද?" },
+                { role: 'user', text: "Do you have anything for a headache?", pronounce: "ඩූ යූ හෑව් එනිතින් ෆෝ අ හෙඩ්-ඒක්?", si: "ඔළුව කැක්කුමට මොනවා හරි තියෙනවද?" },
+                { role: 'bot', text: "Paracetamol is the best. That is 4 Euros.", pronounce: "පැරසිටමෝල් ඊස් ද බෙස්ට්. දැට් ඊස් ෆෝ යූරෝස්.", si: "පැරසිටමෝල් තමයි හොඳම. යුරෝ 4ක් වෙනවා." },
+                { role: 'user', text: "Here is the money. Thank you.", pronounce: "හියර් ඊස් ද මනි. තැන්ක් යූ.", si: "මෙන්න සල්ලි. ස්තූතියි." }
             ]
         },
 
-        // --- 15. GETTING LOST (10 Steps) ---
+        // --- 15. DIRECTIONS ---
         {
-            id: 15, title: "15. Getting Lost", icon: "🗺️", desc: "Asking for directions.",
+            id: 15, title: "15. Getting Lost", icon: "🗺️", desc: "Asking for help politely.",
             dialogue: [
-                { role: 'bot', text: "Hello.", si: "හෙලෝ." },
-                { role: 'user', text: "Excuse me. I am lost.", si: "සමාවෙන්න. මං අතරමං වෙලා.", hint: "Excuse me I am lost" },
-                { role: 'bot', text: "Where are you trying to go?", si: "කොහෙටද යන්න හදන්නේ?" },
-                { role: 'user', text: "I am looking for the Train Station.", si: "මම කෝච්චි ස්ටේෂන් එක හොයනවා.", hint: "Looking for train station" },
-                { role: 'bot', text: "Go straight and turn left at the lights.", si: "කෙලින් ගිහින් ලයිට් කණු ළඟින් වමට හැරෙන්න." },
-                { role: 'user', text: "Is it far from here?", si: "මෙතන ඉඳන් දුරද?", hint: "Is it far" },
-                { role: 'bot', text: "No, only 5 minutes walk.", si: "නෑ, විනාඩි 5ක පයින් යන දුර." },
-                { role: 'user', text: "Thank you very much.", si: "බොහොම ස්තූතියි.", hint: "Thank you very much" },
-                { role: 'bot', text: "You're welcome.", si: "සුළු දෙයක්." },
-                { role: 'user', text: "Have a nice day.", si: "සුභ දවසක්.", hint: "Have a nice day" }
+                { role: 'bot', text: "Yes?", pronounce: "යෙස්?", si: "ඔව්?" },
+                { role: 'user', text: "Excuse me. I am lost. Where is the Tesco?", pronounce: "එක්ස්කියුස් මී. අයි ඈම් ලොස්ට්. වෙයා ඊස් ද ටෙස්කෝ?", si: "සමාවෙන්න. මං අතරමං වෙලා. ටෙස්කෝ එක තියෙන්නේ කොහෙද?" },
+                { role: 'bot', text: "Go straight and turn left at the lights.", pronounce: "ගෝ ස්ට්‍රේට් ඇන්ඩ් ටර්න් ලෙෆ්ට් ඇට් ද ලයිට්ස්.", si: "කෙලින් ගිහින් ලයිට් කණු ළඟින් වමට හැරෙන්න." },
+                { role: 'user', text: "Is it far from here?", pronounce: "ඊස් ඉට් ෆා ෆ්‍රොම් හියර්?", si: "මෙතන ඉඳන් ඒක දුරද?" },
+                { role: 'bot', text: "No, it is only a 5 minute walk.", pronounce: "නෝ, ඉට් ඊස් ඔන්ලි අ ෆයිව් මිනිට් වෝක්.", si: "නෑ, පයින් යන්න විනාඩි 5යි." },
+                { role: 'user', text: "Thank you very much.", pronounce: "තැන්ක් යූ වෙරි මච්.", si: "බොහොම ස්තූතියි." }
             ]
         },
 
-        // --- 16. FIRE ALARM (10 Steps) ---
+        // --- 16. FIRE ALARM ---
         {
-            id: 16, title: "16. Fire Alarm", icon: "🚨", desc: "Emergency reaction.",
+            id: 16, title: "16. Fire Alarm", icon: "🚨", desc: "Reacting to danger.",
             dialogue: [
-                { role: 'bot', text: "(LOUD SIREN) Fire Alarm! Evacuate!", si: "(සයිරන් එක වදී) ගිනි අනතුරු ඇඟවීමක්! එළියට යන්න!" },
-                { role: 'user', text: "Is this a drill or real?", si: "මේක පුහුණුවක්ද ඇත්ත එකක්ද?", hint: "Drill or real" },
-                { role: 'bot', text: "It is real! Drop your tools and go!", si: "ඇත්ත එකක්! බඩු දාලා යන්න!" },
-                { role: 'user', text: "Where is the emergency exit?", si: "හදිසි පිටවීම (Exit) කොහෙද?", hint: "Where is emergency exit" },
-                { role: 'bot', text: "Follow the green signs to the gate.", si: "ගේට්ටුව පැත්තට තියෙන කොළ පාට සලකුණු දිගේ යන්න." },
-                { role: 'user', text: "I am going now.", si: "මම දැන් යනවා.", hint: "I am going now" },
-                { role: 'bot', text: "Do not run, just walk fast.", si: "දුවන්න එපා, වේගෙන් ඇවිදින්න." },
-                { role: 'user', text: "Understood. Everyone is out.", si: "තේරුනා. හැමෝම එළියේ.", hint: "Everyone is out" },
-                { role: 'bot', text: "Go to the assembly point.", si: "එකතු වෙන තැනට යන්න." },
-                { role: 'user', text: "I am at the assembly point.", si: "මම එකතු වෙන තැන ඉන්නේ.", hint: "At assembly point" }
+                { role: 'bot', text: "Fire Alarm! Everyone must go out now!", pronounce: "ෆයර් එලාම්! එව්රිවන් මස්ට් ගෝ අවුට් නව්!", si: "ගිනි අනතුරු ඇඟවීමක්! හැමෝම දැන්ම එළියට යන්න ඕනා!" },
+                { role: 'user', text: "Is this a real fire?", pronounce: "ඊස් දිස් අ රියල් ෆයර්?", si: "මේක ඇත්තටම ගින්නක්ද?" },
+                { role: 'bot', text: "Yes! Leave your tools and go!", pronounce: "යෙස්! ලීව් යො ටූල්ස් ඇන්ඩ් ගෝ!", si: "ඔව්! බඩු දාලා යන්න!" },
+                { role: 'user', text: "Where is the emergency exit?", pronounce: "වෙයා ඊස් ද ඉමර්ජන්සි එක්සිට්?", si: "හදිසි පිටවීමේ දොරටුව කොහෙද?" },
+                { role: 'bot', text: "Use the green door. Go to the assembly point.", pronounce: "යූස් ද ග්‍රීන් ඩෝ. ගෝ ටු ද ඇසෙම්බ්ලි පොයින්ට්.", si: "කොළ පාට දොරෙන් යන්න. එකතු වෙන තැනට යන්න." },
+                { role: 'user', text: "Okay, I am going now.", pronounce: "ඕකේ, අයි ඈම් ගෝයින් නව්.", si: "හරි, මම දැන් යනවා." }
             ]
         },
 
-        // --- 17. ASKING FOR LEAVE (10 Steps) ---
+        // --- 17. ASKING FOR LEAVE ---
         {
-            id: 17, title: "17. Asking for Leave", icon: "✈️", desc: "Requesting holidays.",
+            id: 17, title: "17. Asking Holiday", icon: "✈️", desc: "Requesting time off.",
             dialogue: [
-                { role: 'bot', text: "Yes Nuwan, what do you need?", si: "ඔව් නුවන්, මොකක්ද ඕනා?" },
-                { role: 'user', text: "Sir, I need to ask for a holiday.", si: "සර්, මට නිවාඩුවක් ඉල්ලන්න ඕනා.", hint: "Ask for a holiday" },
-                { role: 'bot', text: "When do you want to go?", si: "කවදද යන්න ඕනා?" },
-                { role: 'user', text: "Next month, for one week.", si: "ලබන මාසේ, සතියකට.", hint: "Next month one week" },
-                { role: 'bot', text: "Is it urgent?", si: "ඒක හදිසිද?" },
-                { role: 'user', text: "Yes, a family matter.", si: "ඔව්, පවුලේ වැඩක්.", hint: "Yes family matter" },
-                { role: 'bot', text: "Okay, fill out the leave form.", si: "හරි, නිවාඩු ෆෝම් එක පුරවන්න." },
-                { role: 'user', text: "Thank you sir.", si: "ස්තූතියි සර්.", hint: "Thank you sir" },
-                { role: 'bot', text: "Make sure your work is done.", si: "වැඩ ටික ඉවරද කියලා බලන්න." },
-                { role: 'user', text: "I will finish everything before I go.", si: "මම යන්න කලින් ඔක්කොම ඉවර කරන්නම්.", hint: "Finish everything" }
+                { role: 'bot', text: "Yes Nuwan, what do you need?", pronounce: "යෙස් නුවන්, වොට් ඩූ යූ නීඩ්?", si: "ඔව් නුවන්, ඔයාට මොකක්ද ඕනා?" },
+                { role: 'user', text: "Sir, can I have a holiday next month?", pronounce: "සර්, කැන් අයි හෑව් අ හොලිඩේ නෙක්ස්ට් මන්ත්?", si: "සර්, මට ලබන මාසේ නිවාඩුවක් ගන්න පුළුවන්ද?" },
+                { role: 'bot', text: "How many days do you need?", pronounce: "හව් මෙනි ඩේස් ඩූ යූ නීඩ්?", si: "දවස් කීයක් ඕනද?" },
+                { role: 'user', text: "I need one week off.", pronounce: "අයි නීඩ් වන් වීක් ඕෆ්.", si: "මට සතියක නිවාඩුවක් ඕනා." },
+                { role: 'bot', text: "That is fine. Please write it in the book.", pronounce: "දැට් ඊස් ෆයින්. ප්ලීස් රයිට් ඉට් ඉන් ද බුක්.", si: "ඒක ප්‍රශ්නයක් නෑ. කරුණාකරලා ඒක පොතේ ලියන්න." },
+                { role: 'user', text: "Thank you sir.", pronounce: "තැන්ක් යූ සර්.", si: "ස්තූතියි සර්." }
             ]
         },
 
-        // --- 18. RENTING A ROOM (10 Steps) ---
+        // --- 18. RENTING A ROOM ---
         {
-            id: 18, title: "18. Renting Room", icon: "🏠", desc: "Talking to landlord.",
+            id: 18, title: "18. Renting Room", icon: "🏠", desc: "Standard questions.",
             dialogue: [
-                { role: 'bot', text: "Hello, are you here to see the room?", si: "හෙලෝ, කාමරේ බලන්නද ආවේ?" },
-                { role: 'user', text: "Yes. How much is the rent?", si: "ඔව්. කුලිය කීයද?", hint: "How much is rent" },
-                { role: 'bot', text: "It is 500 Euros per month.", si: "මාසෙට යුරෝ 500යි." },
-                { role: 'user', text: "Are bills included?", si: "බිල්පත් මේකට ඇතුලත්ද?", hint: "Are bills included" },
-                { role: 'bot', text: "Electricity is extra. Internet is free.", si: "කරන්ට් බිල වෙනම. ඉන්ටර්නෙට් නොමිලේ." },
-                { role: 'user', text: "Is there a kitchen?", si: "කුස්සියක් තියෙනවද?", hint: "Is there a kitchen" },
-                { role: 'bot', text: "Yes, a shared kitchen.", si: "ඔව්, පොදු කුස්සියක්." },
-                { role: 'user', text: "Okay, I will take it.", si: "හරි, මම මේක ගන්නවා.", hint: "I will take it" },
-                { role: 'bot', text: "When do you want to move in?", si: "කවදද එන්නේ?" },
-                { role: 'user', text: "I can move in this weekend.", si: "මට මේ සති අන්තයේ එන්න පුළුවන්.", hint: "Move in weekend" }
+                { role: 'bot', text: "Hello, are you here to see the room?", pronounce: "හෙලෝ, ආ යූ හියර් ටු සී ද රූම්?", si: "හෙලෝ, කාමරේ බලන්නද ආවේ?" },
+                { role: 'user', text: "Yes. How much is the rent?", pronounce: "යෙස්. හව් මච් ඊස් ද රෙන්ට්?", si: "ඔව්. කුලිය කීයද?" },
+                { role: 'bot', text: "It is 500 Euros per month. Bills are extra.", pronounce: "ඉට් ඊස් ෆයිව් හන්ඩ්‍රඩ් යූරෝස් පර් මන්ත්. බිල්ස් ආ එක්ස්ට්‍රා.", si: "මාසෙට යුරෝ 500යි. බිල් වෙනම ගෙවන්න ඕනා." },
+                { role: 'user', text: "Is the internet free?", pronounce: "ඊස් ද ඉන්ටර්නෙට් ෆ්‍රී?", si: "ඉන්ටර්නෙට් නොමිලේ දෙනවද?" },
+                { role: 'bot', text: "Yes, the wifi is free.", pronounce: "යෙස්, ද වයිෆයි ඊස් ෆ්‍රී.", si: "ඔව්, වයි-ෆයි නොමිලේ." },
+                { role: 'user', text: "Great. I will take the room.", pronounce: "ග්‍රේට්. අයි විල් ටේක් ද රූම්.", si: "නියමයි. මම කාමරේ ගන්නවා." }
             ]
         },
 
-        // --- 19. WEEKEND CHAT (10 Steps) ---
+        // --- 19. WEEKEND CHAT ---
         {
-            id: 19, title: "19. Weekend Chat", icon: "🍻", desc: "Friendly talk.",
+            id: 19, title: "19. Small Talk", icon: "🍻", desc: "Friendly polite chat.",
             dialogue: [
-                { role: 'bot', text: "That was a hard week.", si: "මාර අමාරු සතියක්." },
-                { role: 'user', text: "Yes, very busy. But job is done.", si: "ඔව්, හරි බිසී. ඒත් වැඩේ ඉවරයි.", hint: "Job is done" },
-                { role: 'bot', text: "Do you have plans for the weekend?", si: "සති අන්තයේ මොනවද ප්ලෑන්?" },
-                { role: 'user', text: "I will sleep and call my family.", si: "මම නිදාගෙන පවුලේ අයට කතා කරනවා.", hint: "Sleep and call family" },
-                { role: 'bot', text: "Sounds relaxing. Do you like Ireland?", si: "නිදහස් පාටයි. ඔයා අයර්ලන්තෙට කැමතිද?" },
-                { role: 'user', text: "Yes, people are nice but it is cold.", si: "ඔව්, මිනිස්සු හොඳයි, හැබැයි සීතලයි.", hint: "Nice but cold" },
-                { role: 'bot', text: "Haha, you will get used to it.", si: "හහ් හා, ඔයාට ඒක හුරු වෙයි." },
-                { role: 'user', text: "Okay sir. Have a good weekend.", si: "හරි සර්. සුභ සති අන්තයක්.", hint: "Have a good weekend" },
-                { role: 'bot', text: "See you Monday.", si: "සඳුදා හම්බෙමු." },
-                { role: 'user', text: "See you. Bye.", si: "හම්බෙමු. බායි.", hint: "See you bye" }
+                { role: 'bot', text: "It was a busy week.", pronounce: "ඉට් වෝස් අ බිසී වීක්.", si: "මේක කාර්යබහුල සතියක්." },
+                { role: 'user', text: "Yes, very busy. I am happy it is over.", pronounce: "යෙස්, වෙරි බිසී. අයි ඈම් හැපි ඉට් ඊස් ඕවර්.", si: "ඔව්, හරි බිසී. ඉවර වෙච්ච එක ගැන සතුටුයි." },
+                { role: 'bot', text: "Do you have plans for the weekend?", pronounce: "ඩූ යූ හෑව් ප්ලෑන්ස් ෆෝ ද වීකෙන්ඩ්?", si: "සති අන්තයේ මොනවද සැලසුම්?" },
+                { role: 'user', text: "I will sleep and cook some food.", pronounce: "අයි විල් ස්ලීප් ඇන්ඩ් කුක් සම් ෆුඩ්.", si: "මම නිදාගෙන කෑම ටිකක් උයනවා." },
+                { role: 'bot', text: "That sounds nice. Enjoy your rest.", pronounce: "දැට් සවුන්ඩ්ස් නයිස්. එන්ජෝයි යො රෙස්ට්.", si: "හොඳයි වගේ. විවේක ගන්න." },
+                { role: 'user', text: "You too sir. See you on Monday.", pronounce: "යූ ටූ සර්. සී යූ ඔන් මන්ඩේ.", si: "ඔබටත් එසේමයි සර්. සඳුදා හම්බෙමු." }
             ]
         },
 
-        // --- 20. RAINY DAY (10 Steps) ---
+        // --- 20. IRISH WEATHER ---
         {
-            id: 20, title: "20. Irish Weather", icon: "🌧️", desc: "Working in bad weather.",
+            id: 20, title: "20. The Weather", icon: "🌧️", desc: "Working in rain.",
             dialogue: [
-                { role: 'bot', text: "It is pouring rain again!", si: "ආයෙත් හෝ ගාලා වහිනවා!" },
-                { role: 'user', text: "Can we work outside?", si: "අපිට එළියේ වැඩ කරන්න පුළුවන්ද?", hint: "Can we work outside" },
-                { role: 'bot', text: "No, it is too dangerous.", si: "නෑ, ඒක අනතුරුදායක වැඩියි." },
-                { role: 'user', text: "So what should we do?", si: "එහෙනම් අපි මොකද කරන්නේ?", hint: "What should we do" },
-                { role: 'bot', text: "We will tidy the store room.", si: "අපි ස්ටෝ රූම් එක අස් කරමු." },
-                { role: 'user', text: "Okay, I will get the broom.", si: "හරි, මම කොස්ස අරන් එන්නම්.", hint: "I will get the broom" },
-                { role: 'bot', text: "Is your jacket waterproof?", si: "ඔයාගේ ජැකට් එකට වතුර යන්නෙ නැද්ද?" },
-                { role: 'user', text: "Yes, it is good quality.", si: "ඔව්, මේක හොඳ එකක්.", hint: "Yes good quality" },
-                { role: 'bot', text: "Good. Keep warm.", si: "හොඳයි. රස්නෙට ඉන්න." },
-                { role: 'user', text: "Thanks sir.", si: "තැන්ක්ස් සර්.", hint: "Thanks sir" }
+                { role: 'bot', text: "Look at the rain! It is terrible.", pronounce: "ලුක් ඇට් ද රේන්! ඉට් ඊස් ටෙරිබල්.", si: "බලන්නකෝ වැස්ස! හරිම නරකයි." },
+                { role: 'user', text: "Can we work outside today?", pronounce: "කැන් වී වර්ක් අවුට්සයිඩ් ටුඩේ?", si: "අපිට අද එළියේ වැඩ කරන්න පුළුවන්ද?" },
+                { role: 'bot', text: "No, it is too dangerous.", pronounce: "නෝ, ඉට් ඊස් ටූ ඩේන්ජරස්.", si: "නෑ, ඒක අනතුරුදායක වැඩියි." },
+                { role: 'user', text: "So what should we do?", pronounce: "සෝ වොට් ෂුඩ් වී ඩූ?", si: "එහෙනම් අපි මොකද කරන්න ඕනා?" },
+                { role: 'bot', text: "We will clean the store room.", pronounce: "වී විල් ක්ලීන් ද ස්ටෝ රූම්.", si: "අපි ස්ටෝ රූම් එක සුද්ද කරමු." },
+                { role: 'user', text: "Okay, I will get a broom.", pronounce: "ඕකේ, අයි විල් ගෙට් අ බෲම්.", si: "හරි, මම කොස්සක් අරන් එන්නම්." }
             ]
         }
     ];
